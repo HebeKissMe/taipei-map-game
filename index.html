@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台北闖關遊戲</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; }
+    #map { height: 100vh; }
+    .info-box {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      z-index: 1000;
+      border-radius: 5px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="info-box">
+    <div id="message">請掃描 QRCode 解任務</div>
+    <button onclick="resetProgress()">🔄 重置紀錄</button>
+  </div>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const missions = {
+      'daan456': {
+        name: '大安森林公園',
+        region: '大安區',
+        coords: [25.033, 121.543],
+        color: '#4CAF50'
+      },
+      'zhongzheng123': {
+        name: '中正紀念堂',
+        region: '中正區',
+        coords: [25.035, 121.519],
+        color: '#FFC107'
+      }
+    };
+
+    const completed = JSON.parse(localStorage.getItem('completedMissions')) || [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    if (code && missions[code]) {
+      if (!completed.includes(code)) {
+        completed.push(code);
+        localStorage.setItem('completedMissions', JSON.stringify(completed));
+        document.getElementById('message').innerText = `🎉 恭喜完成：${missions[code].name}`;
+      } else {
+        document.getElementById('message').innerText = `✔️ 已完成：${missions[code].name}`;
+      }
+    }
+
+    const map = L.map('map').setView([25.04, 121.54], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '地圖來源：OpenStreetMap'
+    }).addTo(map);
+
+    Object.entries(missions).forEach(([id, mission]) => {
+      const isCompleted = completed.includes(id);
+      const circle = L.circle(mission.coords, {
+        color: isCompleted ? mission.color : '#aaa',
+        fillColor: isCompleted ? mission.color : '#ccc',
+        fillOpacity: 0.6,
+        radius: 200
+      }).addTo(map).bindPopup(`${mission.name}<br>${isCompleted ? '✅ 已完成' : '❌ 尚未完成'}`);
+    });
+
+    function resetProgress() {
+      localStorage.removeItem('completedMissions');
+      location.reload();
+    }
+  </script>
+</body>
+</html>
