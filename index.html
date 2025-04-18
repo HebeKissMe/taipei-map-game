@@ -1,54 +1,32 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>新北實境集點遊戲</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>新北市實境集點遊戲</title>
   <style>
     body { font-family: sans-serif; padding: 1em; background: #f4f4f4; }
     h1 { text-align: center; }
-    .map {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1em;
-      margin-top: 2em;
-    }
-    .region {
-      width: 100px; height: 100px;
-      display: flex; justify-content: center; align-items: center;
-      background-color: lightgray;
-      border-radius: 8px;
-      cursor: default;
-      transition: 0.3s;
-      font-weight: bold;
-      box-shadow: none;
-    }
-    .region.completed {
-      background-color: #ffcc00;
-      box-shadow: 0 0 15px 5px rgba(255, 204, 0, 0.8);
-    }
-    .message {
-      margin-top: 1em;
-      text-align: center;
-      font-size: 1.2em;
-      color: green;
-    }
+    .map-container { display: flex; justify-content: center; align-items: center; margin-top: 2em; }
+    .message { margin-top: 1em; text-align: center; font-size: 1.2em; color: green; }
+    .completed { fill: #ffcc00 !important; filter: drop-shadow(0 0 5px #ffcc00); }
   </style>
 </head>
 <body>
-  <h1>新北實境集點遊戲</h1>
-  <div id="map" class="map"></div>
+  <h1>新北市實境集點遊戲</h1>
+  <div class="map-container">
+    <!-- 將 SVG 地圖內容貼在此處 -->
+    <!-- 例如：<svg id="newtaipei-map" ...>...</svg> -->
+  </div>
   <div id="message" class="message"></div>
 
   <script>
     const missions = {
-      "mission1": { name: "關卡一：新莊探索", region: "新莊" },
-      "mission2": { name: "關卡二：板橋任務", region: "板橋" },
-      "mission3": { name: "關卡三：三重密碼", region: "三重" },
-      "mission4": { name: "關卡四：新店冒險", region: "新店" },
-      "mission5": { name: "關卡五：淡水探秘", region: "淡水" }
+      "mission1": { name: "關卡一：新莊探索", regionId: "Xinzhuang" },
+      "mission2": { name: "關卡二：板橋任務", regionId: "Banqiao" },
+      "mission3": { name: "關卡三：三重密碼", regionId: "Sanchong" },
+      "mission4": { name: "關卡四：新店冒險", regionId: "Xindian" },
+      "mission5": { name: "關卡五：淡水探秘", regionId: "Tamsui" }
     };
 
     const completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
@@ -67,13 +45,4 @@
       }
     }
 
-    const map = document.getElementById("map");
-    for (const [code, data] of Object.entries(missions)) {
-      const div = document.createElement("div");
-      div.className = "region" + (completed.includes(code) ? " completed" : "");
-      div.innerText = data.region;
-      map.appendChild(div);
-    }
-  </script>
-</body>
-</html>
+    // 等待 SVG 加載
