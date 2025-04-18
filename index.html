@@ -1,81 +1,78 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>台北闖關遊戲</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <title>新北實境集點遊戲</title>
   <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; }
-    #map { height: 100vh; }
-    .info-box {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      padding: 10px;
-      z-index: 1000;
-      border-radius: 5px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    body { font-family: sans-serif; padding: 1em; background: #f4f4f4; }
+    h1 { text-align: center; }
+    .map {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1em;
+      margin-top: 2em;
+    }
+    .region {
+      width: 100px; height: 100px;
+      display: flex; justify-content: center; align-items: center;
+      background-color: lightgray;
+      border-radius: 8px;
+      cursor: default;
+      transition: 0.3s;
+      font-weight: bold;
+      box-shadow: none;
+    }
+    .region.completed {
+      background-color: #ffcc00;
+      box-shadow: 0 0 15px 5px rgba(255, 204, 0, 0.8);
+    }
+    .message {
+      margin-top: 1em;
+      text-align: center;
+      font-size: 1.2em;
+      color: green;
     }
   </style>
 </head>
 <body>
-  <div class="info-box">
-    <div id="message">請掃描 QRCode 解任務</div>
-    <button onclick="resetProgress()">🔄 重置紀錄</button>
-  </div>
-  <div id="map"></div>
+  <h1>新北實境集點遊戲</h1>
+  <div id="map" class="map"></div>
+  <div id="message" class="message"></div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
     const missions = {
-      'daan456': {
-        name: '大安森林公園',
-        region: '大安區',
-        coords: [25.033, 121.543],
-        color: '#4CAF50'
-      },
-      'zhongzheng123': {
-        name: '中正紀念堂',
-        region: '中正區',
-        coords: [25.035, 121.519],
-        color: '#FFC107'
-      }
+      "mission1": { name: "關卡一：新莊探索", region: "新莊" },
+      "mission2": { name: "關卡二：板橋任務", region: "板橋" },
+      "mission3": { name: "關卡三：三重密碼", region: "三重" },
+      "mission4": { name: "關卡四：新店冒險", region: "新店" },
+      "mission5": { name: "關卡五：淡水探秘", region: "淡水" }
     };
 
-    const completed = JSON.parse(localStorage.getItem('completedMissions')) || [];
+    const completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
 
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get('code');
+    const messageBox = document.getElementById("message");
+
     if (code && missions[code]) {
       if (!completed.includes(code)) {
         completed.push(code);
-        localStorage.setItem('completedMissions', JSON.stringify(completed));
-        document.getElementById('message').innerText = `🎉 恭喜完成：${missions[code].name}`;
+        localStorage.setItem("completedMissions", JSON.stringify(completed));
+        messageBox.innerText = `🎉 恭喜完成「${missions[code].name}」！`;
       } else {
-        document.getElementById('message').innerText = `✔️ 已完成：${missions[code].name}`;
+        messageBox.innerText = `✅ 你已完成「${missions[code].name}」`;
       }
     }
 
-    const map = L.map('map').setView([25.04, 121.54], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '地圖來源：OpenStreetMap'
-    }).addTo(map);
-
-    Object.entries(missions).forEach(([id, mission]) => {
-      const isCompleted = completed.includes(id);
-      const circle = L.circle(mission.coords, {
-        color: isCompleted ? mission.color : '#aaa',
-        fillColor: isCompleted ? mission.color : '#ccc',
-        fillOpacity: 0.6,
-        radius: 200
-      }).addTo(map).bindPopup(`${mission.name}<br>${isCompleted ? '✅ 已完成' : '❌ 尚未完成'}`);
-    });
-
-    function resetProgress() {
-      localStorage.removeItem('completedMissions');
-      location.reload();
+    const map = document.getElementById("map");
+    for (const [code, data] of Object.entries(missions)) {
+      const div = document.createElement("div");
+      div.className = "region" + (completed.includes(code) ? " completed" : "");
+      div.innerText = data.region;
+      map.appendChild(div);
     }
   </script>
 </body>
