@@ -3,46 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>新北市實境集點遊戲</title>
-  <style>
-    body { font-family: sans-serif; padding: 1em; background: #f4f4f4; }
-    h1 { text-align: center; }
-    .map-container { display: flex; justify-content: center; align-items: center; margin-top: 2em; }
-    .message { margin-top: 1em; text-align: center; font-size: 1.2em; color: green; }
-    .completed { fill: #ffcc00 !important; filter: drop-shadow(0 0 5px #ffcc00); }
-  </style>
+  <title>新北實境集點遊戲</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>新北市實境集點遊戲</h1>
-  <div class="map-container">
-    <a title="Justissam, CC BY-SA 4.0 &lt;https://creativecommons.org/licenses/by-sa/4.0&gt;, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Map_%E6%96%B0%E5%8C%97%E5%B8%82_%E8%A1%8C%E6%94%BF%E5%8D%80%E5%8A%83.svg"><img width="512" alt="Map 新北市 行政區劃" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Map_%E6%96%B0%E5%8C%97%E5%B8%82_%E8%A1%8C%E6%94%BF%E5%8D%80%E5%8A%83.svg/512px-Map_%E6%96%B0%E5%8C%97%E5%B8%82_%E8%A1%8C%E6%94%BF%E5%8D%80%E5%8A%83.svg.png?20150101054323"></a>
-    <!-- 例如：<svg id="newtaipei-map" ...>...</svg> -->
+  <h1>新北實境集點遊戲</h1>
+  <div id="message"></div>
+  <!-- 嵌入 SVG 地圖 -->
+  <div id="map-container">
+    <!-- SVG 地圖將在此處載入 -->
   </div>
-  <div id="message" class="message"></div>
-
-  <script>
-    const missions = {
-      "mission1": { name: "關卡一：新莊探索", regionId: "Xinzhuang" },
-      "mission2": { name: "關卡二：板橋任務", regionId: "Banqiao" },
-      "mission3": { name: "關卡三：三重密碼", regionId: "Sanchong" },
-      "mission4": { name: "關卡四：新店冒險", regionId: "Xindian" },
-      "mission5": { name: "關卡五：淡水探秘", regionId: "Tamsui" }
-    };
-
-    const completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const messageBox = document.getElementById("message");
-
-    if (code && missions[code]) {
-      if (!completed.includes(code)) {
-        completed.push(code);
-        localStorage.setItem("completedMissions", JSON.stringify(completed));
-        messageBox.innerText = `🎉 恭喜完成「${missions[code].name}」！`;
-      } else {
-        messageBox.innerText = `✅ 你已完成「${missions[code].name}」`;
-      }
-    }
-
-    // 等待 SVG 加載
+  <script src="script.js"></script>
+</body>
+</html>
