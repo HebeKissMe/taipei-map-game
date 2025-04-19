@@ -1,6 +1,85 @@
-<div id="map-container">
-  <img src="img/map-base.png" id="base-map" />
-  <img class="layer" id="light-Xinzhuang" src="img/light-Xinzhuang.png" />
-  <img class="layer" id="light-Shuangxi" src="img/light-Shuangxi.png" />
-  <img class="layer" id="light-Tamsui" src="img/light-Tamsui.png" />
-</div>
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新北市圖層集點遊戲</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+      background: #f4f4f4;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 0.5em;
+    }
+    #map-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin: auto;
+    }
+    #map-container img {
+      width: 100%;
+      display: block;
+    }
+    .layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: none;
+      pointer-events: none;
+    }
+    .layer.active {
+      display: block;
+    }
+    #message {
+      margin-top: 1em;
+      font-size: 1.2em;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>新北市集點遊戲</h1>
+  <div id="message"></div>
+  <div id="map-container">
+    <img src="img/map-base.png" id="base-map" alt="地圖底圖" />
+    <img class="layer" id="light-Xinzhuang" src="img/light-Xinzhuang.png" />
+    <img class="layer" id="light-Shuangxi" src="img/light-Shuangxi.png" />
+    <img class="layer" id="light-Tamsui" src="img/light-Tamsui.png" />
+  </div>
+
+  <script>
+    const missions = {
+      mission1: { regionId: "Xinzhuang", name: "新莊任務" },
+      mission4: { regionId: "Shuangxi", name: "雙溪任務" },
+      mission5: { regionId: "Tamsui", name: "淡水任務" },
+    };
+
+    const completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    if (code && missions[code]) {
+      const regionId = missions[code].regionId;
+      if (!completed.includes(regionId)) {
+        completed.push(regionId);
+        localStorage.setItem("completedMissions", JSON.stringify(completed));
+        document.getElementById("message").innerText = `🎉 恭喜完成「${missions[code].name}」！`;
+      } else {
+        document.getElementById("message").innerText = `✅ 你已完成「${missions[code].name}」`;
+      }
+    }
+
+    completed.forEach((regionId) => {
+      const layer = document.getElementById(`light-${regionId}`);
+      if (layer) {
+        layer.classList.add("active");
+      }
+    });
+  </script>
+</body>
+</html>
