@@ -64,7 +64,8 @@
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
-    try {
+    try {      
+      console.log("[DEBUG] completed (before check):", completed);
       completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
     } catch (e) {
       console.warn("無法解析 localStorage 的 completedMissions");
@@ -82,6 +83,7 @@
       }
     }
 
+    console.log("[DEBUG] completed (before display):", completed);
     if (completed.length > 0) {
       completed.forEach((regionId) => {
         const layer = document.getElementById(`light-${regionId}`);
