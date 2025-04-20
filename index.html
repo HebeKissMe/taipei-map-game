@@ -24,6 +24,16 @@
       width: 100%;
       display: block;
     }
+    .layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      display: none;
+      pointer-events: none;
+    }
+    .layer.active {
+      display: block;
+    }
     #message {
       margin-top: 1em;
       font-size: 1.2em;
@@ -45,12 +55,11 @@
   <div id="message"></div>
   <div id="map-container">
     <img src="img/map-base.png" id="base-map" alt="地圖底圖" />
-    <img class="layer" id="light-xinzhuang" src="img/light-xinzhuang.png"  hidden="hidden"/>
-    <img class="layer" id="light-shuangxi" src="img/light-shuangxi.png"  hidden="hidden"/>
-    <img class="layer" id="light-tamsui" src="img/light-tamsui.png"  hidden="hidden"/>
+    <img class="layer" id="light-xinzhuang" src="img/light-xinzhuang.png" />
+    <img class="layer" id="light-shuangxi" src="img/light-shuangxi.png" />
+    <img class="layer" id="light-tamsui" src="img/light-tamsui.png" />
   </div>
   <button id="reset-button" onclick="resetProgress()">🔄 清除進度</button>
-  <button onclick="toggle(this);">Hide image</button>
 
   <script>
     const missions = {
@@ -64,7 +73,7 @@
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
 
-    try {      
+    try {
       console.log("[DEBUG] completed (before check):", completed);
       completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
     } catch (e) {
@@ -84,7 +93,7 @@
     }
 
     console.log("[DEBUG] completed (before display):", completed);
-    if (completed.length > 0) {
+if (completed.length > 0) {
       completed.forEach((regionId) => {
         const layer = document.getElementById(`light-${regionId}`);
         if (layer) {
@@ -97,17 +106,6 @@
       localStorage.removeItem("completedMissions");
       location.reload();
     }
-
-    let toggle = button => {
-    let element = document.getElementById("light-xinzhuang");
-    let hidden = element.getAttribute("hidden");
-    
-    if (hidden) {
-       element.removeAttribute("hidden");
-    } else {
-       element.setAttribute("hidden", "hidden");
-    }
-  }
   </script>
 </body>
 </html>
