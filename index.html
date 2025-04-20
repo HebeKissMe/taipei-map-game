@@ -62,6 +62,7 @@
   <button id="reset-button" onclick="resetProgress()">🔄 清除進度</button>
 
   <script>
+  window.addEventListener("DOMContentLoaded", function () {
     const missions = {
       mission1: { regionId: "xinzhuang", name: "新莊任務" },
       mission2: { regionId: "shuangxi", name: "雙溪任務" },
@@ -93,7 +94,7 @@
     }
 
     console.log("[DEBUG] completed (before display):", completed);
-if (completed.length > 0) {
+    if (completed.length > 0) {
       completed.forEach((regionId) => {
         const layer = document.getElementById(`light-${regionId}`);
         if (layer) {
@@ -102,10 +103,12 @@ if (completed.length > 0) {
       });
     }
 
-    function resetProgress() {
+    window.resetProgress = function () {
       localStorage.removeItem("completedMissions");
       location.reload();
-    }
-  </script>
+    };
+  });
+</script>
+
 </body>
 </html>
