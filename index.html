@@ -60,6 +60,7 @@
     <img class="layer" id="light-tamsui" src="img/light-tamsui.png"  hidden="hidden"/>
   </div>
   <button id="reset-button" onclick="resetProgress()">🔄 清除進度</button>
+  <button onclick="toggle(this);">Hide image</button>
 
   <script>
     const missions = {
@@ -104,6 +105,19 @@
       localStorage.removeItem("completedMissions");
       location.reload();
     }
+
+    let toggle = button => {
+    let element = document.getElementById("light-xinzhuang");
+    let hidden = element.getAttribute("hidden");
+    
+    if (hidden) {
+       element.removeAttribute("hidden");
+       img.innerText = "Hide image";
+    } else {
+       element.setAttribute("hidden", "hidden");
+       img.innerText = "Show image";
+    }
+  }
   </script>
 </body>
 </html>
