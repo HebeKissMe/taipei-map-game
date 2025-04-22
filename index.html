@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>新北市圖層集點遊戲</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -39,14 +40,22 @@
       font-size: 1.2em;
       color: green;
     }
-    #reset-button {
+    #reset-button, #scan-button {
       margin-top: 1em;
       padding: 0.5em 1em;
-      background-color: #e74c3c;
+      background-color: #3498db;
       color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
+    }
+    #reset-button {
+      background-color: #e74c3c;
+      margin-left: 0.5em;
+    }
+    #qr-reader {
+      margin: 1em auto;
+      max-width: 320px;
     }
   </style>
 </head>
@@ -59,56 +68,88 @@
     <img class="layer" id="light-shuangxi" src="img/light-shuangxi.png" />
     <img class="layer" id="light-tamsui" src="img/light-tamsui.png" />
   </div>
+  <button id="scan-button" onclick="startScanner()">📷 掃描 QRCode</button>
   <button id="reset-button" onclick="resetProgress()">🔄 清除進度</button>
+  <div id="qr-reader"></div>
 
   <script>
-  window.addEventListener("DOMContentLoaded", function () {
-    const missions = {
-      mission1: { regionId: "xinzhuang", name: "新莊任務" },
-      mission2: { regionId: "shuangxi", name: "雙溪任務" },
-      mission3: { regionId: "tamsui", name: "淡水任務" },
-    };
+    window.addEventListener("DOMContentLoaded", function () {
+      const missions = {
+        mission1: { regionId: "xinzhuang", name: "新莊任務" },
+        mission2: { regionId: "shuangxi", name: "雙溪任務" },
+        mission3: { regionId: "tamsui", name: "淡水任務" },
+      };
 
-    let completed = [];
-    const messageBox = document.getElementById("message");
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
+      let completed = [];
+      const messageBox = document.getElementById("message");
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get("code");
 
-    try {
-      console.log("[DEBUG] completed (before check):", completed);
-      completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
-    } catch (e) {
-      console.warn("無法解析 localStorage 的 completedMissions");
-      completed = [];
-    }
-
-    if (code && missions[code]) {
-      const regionId = missions[code].regionId;
-      if (!completed.includes(regionId)) {
-        completed.push(regionId);
-        localStorage.setItem("completedMissions", JSON.stringify(completed));
-        messageBox.innerText = `🎉 恭喜完成「${missions[code].name}」！`;
-      } else {
-        messageBox.innerText = `✅ 你已完成「${missions[code].name}」`;
+      try {
+        console.log("[DEBUG] completed (before check):", completed);
+        completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
+      } catch (e) {
+        console.warn("無法解析 localStorage 的 completedMissions");
+        completed = [];
       }
-    }
 
-    console.log("[DEBUG] completed (before display):", completed);
-    if (completed.length > 0) {
-      completed.forEach((regionId) => {
-        const layer = document.getElementById(`light-${regionId}`);
-        if (layer) {
-          layer.classList.add("active");
+      if (code && missions[code]) {
+        handleScanResult(code);
+      }
+
+      console.log("[DEBUG] completed (before display):", completed);
+      if (completed.length > 0) {
+        completed.forEach((regionId) => {
+          const layer = document.getElementById(`light-${regionId}`);
+          if (layer) {
+            layer.classList.add("active");
+          }
+        });
+      }
+
+      window.resetProgress = function () {
+        localStorage.removeItem("completedMissions");
+        location.reload();
+      };
+
+      window.startScanner = function () {
+        const qrRegion = document.getElementById("qr-reader");
+        qrRegion.innerHTML = "";
+        const scanner = new Html5Qrcode("qr-reader");
+
+        scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: 250 },
+          (decodedText) => {
+            console.log("掃到 QRCode:", decodedText);
+            handleScanResult(decodedText);
+            scanner.stop().then(() => {
+              qrRegion.innerHTML = "";
+            });
+          },
+          (error) => {
+            // 可以忽略錯誤
+          }
+        );
+      };
+
+      window.handleScanResult = function (code) {
+        if (missions[code]) {
+          const regionId = missions[code].regionId;
+          if (!completed.includes(regionId)) {
+            completed.push(regionId);
+            localStorage.setItem("completedMissions", JSON.stringify(completed));
+            messageBox.innerText = `🎉 掃描成功！完成「${missions[code].name}」`;
+          } else {
+            messageBox.innerText = `✅ 「${missions[code].name}」已完成`;
+          }
+          const layer = document.getElementById(`light-${regionId}`);
+          if (layer) layer.classList.add("active");
+        } else {
+          messageBox.innerText = `❌ 無效的 QRCode`;
         }
-      });
-    }
-
-    window.resetProgress = function () {
-      localStorage.removeItem("completedMissions");
-      location.reload();
-    };
-  });
-</script>
-
+      };
+    });
+  </script>
 </body>
 </html>
