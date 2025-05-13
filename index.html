@@ -61,6 +61,35 @@
 </head>
 <body>
   <h1>新北市集點遊戲</h1>
+
+  <div>
+    <label for="division">分營：</label>
+    <select id="division">
+      <option value="智">智</option>
+      <option value="仁">仁</option>
+      <option value="勇">勇</option>
+      <option value="愛">愛</option>
+    </select>
+    <label for="group">分團：</label>
+    <select id="group">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+    </select>
+    <label for="squad">小隊：</label>
+    <select id="squad">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+    </select>
+  </div>
+  
   <div id="message"></div>
   <div id="map-container">
     <img src="img/map-base.png" id="base-map" alt="地圖底圖" />
@@ -145,6 +174,21 @@
           }
           const layer = document.getElementById(`light-${regionId}`);
           if (layer) layer.classList.add("active");
+
+          fetch("https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec", {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mission: missions[code].name,
+              region: regionId,
+              division,
+              group,
+              squad,
+              sheet: code, // 傳入任務代碼做為對應的工作表名稱
+              timestamp: new Date().toISOString()
+            })
+          });
         } else {
           messageBox.innerText = `❌ 無效的 QRCode`;
         }
