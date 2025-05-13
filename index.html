@@ -56,6 +56,11 @@
     #qr-reader {
       margin: 1em auto;
       max-width: 320px;
+    }    
+    select {
+      margin: 0.5em;
+      padding: 0.5em;
+      font-size: 1em;
     }
   </style>
 </head>
@@ -165,6 +170,10 @@
       window.handleScanResult = function (code) {
         if (missions[code]) {
           const regionId = missions[code].regionId;
+          const division = document.getElementById("division").value;
+          const group = document.getElementById("group").value;
+          const squad = document.getElementById("squad").value;
+          
           if (!completed.includes(regionId)) {
             completed.push(regionId);
             localStorage.setItem("completedMissions", JSON.stringify(completed));
