@@ -194,7 +194,7 @@
               division,
               group,
               squad,
-              sheet: code, // 傳入任務代碼做為對應的工作表名稱
+              sheet: code.replace('mission', ''), // 傳入任務代碼做為對應的工作表名稱
               timestamp: new Date().toISOString()
             })
           });
