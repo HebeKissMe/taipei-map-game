@@ -97,7 +97,33 @@
   
   <div id="message"></div>
   <div id="map-container">
-    <img src="img/map-base.jpg" id="base-map" alt="地圖底圖" />
+    <img src="img/map-base.jpg" id="base-map" alt="地圖底圖" />    
+    <img class="layer" id="light-bali" src="img/light-bali.png" />
+    <img class="layer" id="light-banqiao" src="img/light-banqiao.png" />
+    <img class="layer" id="light-gongliao" src="img/light-gongliao.png" />
+    <img class="layer" id="light-jinshan" src="img/light-jinshan.png" />
+    <img class="layer" id="light-linkou" src="img/light-linkou.png" />
+    <img class="layer" id="light-luzhou" src="img/light-luzhou.png" />
+    <img class="layer" id="light-pinglin" src="img/light-pinglin.png" />
+    <img class="layer" id="light-pingxi" src="img/light-pingxi.png" />
+    <img class="layer" id="light-ruifang" src="img/light-ruifang.png" />
+    <img class="layer" id="light-sanchong" src="img/light-sanchong.png" />
+    <img class="layer" id="light-sanxia" src="img/light-sanxia.png" />
+    <img class="layer" id="light-sanzhi" src="img/light-sanzhi.png" />
+    <img class="layer" id="light-shenkeng" src="img/light-shenkeng.png" />
+    <img class="layer" id="light-shiding" src="img/light-shiding.png" />
+    <img class="layer" id="light-shimen" src="img/light-shimen.png" />
+    <img class="layer" id="light-shulin" src="img/light-shulin.png" />
+    <img class="layer" id="light-taishan" src="img/light-taishan.png" />
+    <img class="layer" id="light-tucheng" src="img/light-tucheng.png" />
+    <img class="layer" id="light-wanli" src="img/light-wanli.png" />
+    <img class="layer" id="light-wugu" src="img/light-wugu.png" />
+    <img class="layer" id="light-wulai" src="img/light-wulai.png" />
+    <img class="layer" id="light-xindian" src="img/light-xindian.png" />
+    <img class="layer" id="light-xizhi" src="img/light-xizhi.png" />
+    <img class="layer" id="light-yingge" src="img/light-yingge.png" />
+    <img class="layer" id="light-yonghe" src="img/light-yonghe.png" />
+    <img class="layer" id="light-zhonghe" src="img/light-zhonghe.png" />
     <img class="layer" id="light-xinzhuang" src="img/light-xinzhuang.png" />
     <img class="layer" id="light-shuangxi" src="img/light-shuangxi.png" />
     <img class="layer" id="light-tamsui" src="img/light-tamsui.png" />
@@ -109,9 +135,35 @@
   <script>
     window.addEventListener("DOMContentLoaded", function () {
       const missions = {
-        mission1: { regionId: "xinzhuang", name: "新莊任務" },
-        mission2: { regionId: "shuangxi", name: "雙溪任務" },
-        mission3: { regionId: "tamsui", name: "淡水任務" },
+        missionA: { regionId: "banqiao", name: "市政高塔" },
+        missionB: { regionId: "tamsui", name: "滬尾斜張" },
+        missionC: { regionId: "taishan", name: "古早同樂" },
+        missionD: { regionId: "xizhi", name: "活水之源" },
+        missionE: { regionId: "sanzhi", name: "水力魔法" },
+        missionF: { regionId: "shimen", name: "動力電能" },
+        missionG: { regionId: "jinshan", name: "田園之樂" },
+        mission01: { regionId: "xindian", name: "三索吊橋" },
+        mission02: { regionId: "sanchong", name: "大地翱翔" },
+        mission03: { regionId: "shiding", name: "雙索渡河" },
+        mission04: { regionId: "bali", name: "重機吊裝" },
+        mission05: { regionId: "zhonghe", name: "開戰時刻" },
+        mission06: { regionId: "shuangxi", name: "山林垂盪" },
+        mission07: { regionId: "linkou", name: "網紅崛起" },
+        mission08: { regionId: "luzhou", name: "旱地行舟" },
+        mission09: { regionId: "wanli", name: "天才釣手" },
+        mission10: { regionId: "ruifang", name: "水底摸金" },
+        mission11: { regionId: "shenkeng", name: "全面淨化" },
+        mission12: { regionId: "shulin", name: "一飛沖天" },
+        mission13: { regionId: "wugu", name: "順藤摸瓜" },
+        mission14: { regionId: "xinzhuang", name: "王牌投手" },
+        mission15: { regionId: "wulai", name: "泰雅勇士" },
+        mission16: { regionId: "pingxi", name: "天燈祈福" },
+        mission17: { regionId: "yonghe", name: "城市迷蹤" },
+        mission18: { regionId: "pinglin", name: "茶顏觀色" },
+        mission19: { regionId: "tucheng", name: "花巷草弄" },
+        mission20: { regionId: "gongliao", name: "星之彩瓶" },
+        mission21: { regionId: "yingge", name: "大藝術家" },
+        mission22: { regionId: "sanxia", name: "青出於藍" },
       };
 
       let completed = [];
