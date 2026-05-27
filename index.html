@@ -3,261 +3,651 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>新北童遊城市探索</title>
-  <title>E-PASS</title>
+  <title>重返白浪島｜斥候挑戰谷 E-PASS</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
-      padding: 1em;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      margin: 0;
+      padding: 16px;
       background: #f4f4f4;
+      color: #111;
       text-align: center;
     }
+
     h1 {
-      margin-bottom: 0.5em;
+      margin: 0;
+      font-size: 1.5rem;
+      line-height: 1.4;
     }
+
+    h2 {
+      margin: 4px 0 16px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #444;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 980px;
+      margin: 0 auto 12px;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      text-align: left;
+    }
+
+    .control-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    #message {
+      width: 100%;
+      max-width: 980px;
+      min-height: 44px;
+      margin: 12px auto;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      font-size: 1rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    #message.success {
+      color: #087f23;
+      border-color: #b7dfb9;
+      background: #f3fbf3;
+    }
+
+    #message.error {
+      color: #b00020;
+      border-color: #f1b7bd;
+      background: #fff5f6;
+    }
+
     #map-container {
       position: relative;
       width: 100%;
-      max-width: 600px;
+      max-width: 980px;
       margin: auto;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      overflow: hidden;
     }
-    #map-container img {
+
+    #base-map {
       width: 100%;
       display: block;
     }
-    .layer {
+
+    .pass-layer {
       position: absolute;
-      top: 0;
-      left: 0;
-      display: none !important;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
       pointer-events: none;
     }
-    .layer.active {
-      display: block !important;
+
+    .pass-layer.active {
+      display: block;
     }
-    #message {
-      margin-top: 1em;
-      font-size: 1.2em;
-      color: green;
+
+    .button-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 12px auto;
     }
-    #reset-button, #scan-button {
-      margin-top: 1em;
-      padding: 0.5em 1em;
-      background-color: #3498db;
-      color: white;
+
+    button {
+      padding: 10px 16px;
+      font-size: 1rem;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      color: #fff;
       cursor: pointer;
     }
-    #reset-button {
-      background-color: #e74c3c;
-      margin-left: 0.5em;
+
+    #scan-button {
+      background: #2f80ed;
     }
+
+    #reset-button {
+      background: #eb5757;
+    }
+
+    #export-button {
+      background: #333;
+    }
+
     #qr-reader {
-      margin: 1em auto;
-      max-width: 320px;
-    }    
-    select {
-      margin: 0.5em;
-      padding: 0.5em;
-      font-size: 1em;
+      width: 100%;
+      max-width: 360px;
+      margin: 12px auto;
+      background: #fff;
+    }
+
+    .score-board {
+      width: 100%;
+      max-width: 980px;
+      margin: 12px auto;
+      padding: 12px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      text-align: left;
+    }
+
+    .score-board h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .score-card {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .score-card strong {
+      font-size: 1.1rem;
+    }
+
+    .hint {
+      width: 100%;
+      max-width: 980px;
+      margin: 8px auto 0;
+      color: #666;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      text-align: left;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 10px;
+      }
+
+      .control-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>新北童遊城市探索 </h1>
-  <h1>E-PASS </h1>
-  <div>
-    <label for="division">分營：</label>
-    <select id="division">
-      <option value="智">智</option>
-      <option value="仁">仁</option>
-      <option value="勇">勇</option>
-      <option value="愛">愛</option>
-    </select>
-    <label for="group">分團：</label>
-    <select id="group">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-    </select>
-    <label for="squad">小隊：</label>
-    <select id="squad">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-      <option value="7">7</option>
-      <option value="8">8</option>
-      <option value="9">9</option>
-      <option value="10">10</option>
-    </select>
-  </div>
-  
-  <div id="message"></div>
+  <h1>重返白浪島｜屎候挑戰谷</h1>
+  <h2>E-PASS 闖關計分卡</h2>
+
+  <section class="panel" aria-label="隊伍資料">
+    <div class="control-grid">
+      <div>
+        <label for="division">分營</label>
+        <select id="division">
+          <option value="智">智</option>
+          <option value="仁">仁</option>
+          <option value="勇">勇</option>
+          <option value="愛">愛</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="group">分團</label>
+        <select id="group">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="squad">小隊</label>
+        <select id="squad">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <div id="message">請先選擇分營、分團、小隊，再掃描關卡 QR Code。</div>
+
   <div id="map-container">
-    <img src="img/base-map.jpg" id="base-map" alt="地圖底圖" />    
-    <img class="layer" id="light-bali" src="img/light-bali.png" />
-    <img class="layer" id="light-banqiao" src="img/light-banqiao.png" />
-    <img class="layer" id="light-gongliao" src="img/light-gongliao.png" />
-    <img class="layer" id="light-jinshan" src="img/light-jinshan.png" />
-    <img class="layer" id="light-linkou" src="img/light-linkou.png" />
-    <img class="layer" id="light-luzhou" src="img/light-luzhou.png" />
-    <img class="layer" id="light-pinglin" src="img/light-pinglin.png" />
-    <img class="layer" id="light-pingxi" src="img/light-pingxi.png" />
-    <img class="layer" id="light-ruifang" src="img/light-ruifang.png" />
-    <img class="layer" id="light-sanchong" src="img/light-sanchong.png" />
-    <img class="layer" id="light-sanxia" src="img/light-sanxia.png" />
-    <img class="layer" id="light-sanzhi" src="img/light-sanzhi.png" />
-    <img class="layer" id="light-shenkeng" src="img/light-shenkeng.png" />
-    <img class="layer" id="light-shiding" src="img/light-shiding.png" />
-    <img class="layer" id="light-shimen" src="img/light-shimen.png" />
-    <img class="layer" id="light-shulin" src="img/light-shulin.png" />
-    <img class="layer" id="light-taishan" src="img/light-taishan.png" />
-    <img class="layer" id="light-tucheng" src="img/light-tucheng.png" />
-    <img class="layer" id="light-wanli" src="img/light-wanli.png" />
-    <img class="layer" id="light-wugu" src="img/light-wugu.png" />
-    <img class="layer" id="light-wulai" src="img/light-wulai.png" />
-    <img class="layer" id="light-xindian" src="img/light-xindian.png" />
-    <img class="layer" id="light-xizhi" src="img/light-xizhi.png" />
-    <img class="layer" id="light-yingge" src="img/light-yingge.png" />
-    <img class="layer" id="light-yonghe" src="img/light-yonghe.png" />
-    <img class="layer" id="light-zhonghe" src="img/light-zhonghe.png" />
-    <img class="layer" id="light-xinzhuang" src="img/light-xinzhuang.png" />
-    <img class="layer" id="light-shuangxi" src="img/light-shuangxi.png" />
-    <img class="layer" id="light-tamsui" src="img/light-tamsui.png" />
+    <!-- 底圖請放在 img 資料夾，檔名：闖關卡-底圖.jpg -->
+    <img src="img/闖關卡-底圖.jpg" id="base-map" alt="闖關卡底圖" />
   </div>
-  <button id="scan-button" onclick="startScanner()">📷 掃描 QRCode</button>
+
+  <div class="button-row">
+    <button id="scan-button" type="button" onclick="startScanner()">📷 掃描 QR Code</button>
+    <button id="export-button" type="button" onclick="downloadLocalCsv()">⬇️ 匯出本機紀錄 CSV</button>
+    <button id="reset-button" type="button" onclick="resetProgress()">清除本機進度</button>
+  </div>
+
   <div id="qr-reader"></div>
+
+  <section class="score-board" aria-label="本機計分紀錄">
+    <h3>本機即時計分</h3>
+    <div id="score-grid" class="score-grid"></div>
+  </section>
+
+  <p class="hint">
+    QR Code 內容建議格式：<br />
+    10 點紅色 QR：<code>目前網址?code=mission01&points=10</code><br />
+    5 點藍色 QR：<code>目前網址?code=mission01&points=5</code><br />
+    本頁也支援純文字格式：<code>mission01-10</code>、<code>mission01-5</code>、<code>mission01|10</code>、<code>mission01|5</code>。<br />
+    底圖用的入口 QR Code 可直接使用本頁網址，QR Code 顏色維持黑色即可。
+  </p>
 
   <script>
     window.addEventListener("DOMContentLoaded", function () {
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec";
+      const EVENT_NAME = "重返白浪島｜屎候挑戰谷";
+
       const missions = {
-        missionA: { regionId: "banqiao", name: "市政高塔" },
-        missionB: { regionId: "tamsui", name: "滬尾斜張" },
-        missionC: { regionId: "taishan", name: "古早童樂" },
-        missionD: { regionId: "xizhi", name: "活水之源" },
-        missionE: { regionId: "sanzhi", name: "水力魔法" },
-        missionF: { regionId: "shimen", name: "天空之城" },
-        missionG: { regionId: "jinshan", name: "田園之樂" },
-        mission01: { regionId: "xindian", name: "三索吊橋" },
-        mission02: { regionId: "sanchong", name: "大地翱翔" },
-        mission03: { regionId: "shiding", name: "雙索渡河" },
-        mission04: { regionId: "bali", name: "重機吊裝" },
-        mission05: { regionId: "zhonghe", name: "開戰時刻" },
-        mission06: { regionId: "shuangxi", name: "山林垂盪" },
-        mission07: { regionId: "linkou", name: "網紅崛起" },
-        mission08: { regionId: "pingxi", name: "天燈祈福" },
-        mission09: { regionId: "wugu", name: "順藤摸瓜" },
-        mission10: { regionId: "luzhou", name: "旱地行舟" },
-        mission11: { regionId: "wanli", name: "天才釣手" },
-        mission12: { regionId: "ruifang", name: "水底摸金" },
-        mission13: { regionId: "shenkeng", name: "全面淨化" },
-        mission14: { regionId: "shulin", name: "一飛沖天" },
-        mission15: { regionId: "xinzhuang", name: "王牌投手" },
-        mission16: { regionId: "wulai", name: "泰雅勇士" },
-        mission17: { regionId: "sanxia", name: "青出於藍" },
-        mission18: { regionId: "yingge", name: "大藝術家" },
-        mission19: { regionId: "gongliao", name: "星之彩瓶" },
-        mission20: { regionId: "pinglin", name: "茶顏觀色" },
-        mission21: { regionId: "tucheng", name: "花巷草弄" },
-        mission22: { regionId: "yonghe", name: "城市迷蹤" },
+        mission01: { no: "01", code: "mission01", name: "雙索渡河" },
+        mission02: { no: "02", code: "mission02", name: "古玩競技" },
+        mission03: { no: "03", code: "mission03", name: "套索越谷" },
+        mission04: { no: "04", code: "mission04", name: "救援前線" },
+        mission05: { no: "05", code: "mission05", name: "定向追蹤" },
+        mission06: { no: "06", code: "mission06", name: "空投補給" },
+        mission07: { no: "07", code: "mission07", name: "雨水蒐集" },
+        mission08: { no: "08", code: "mission08", name: "信號發射" },
+        mission09: { no: "09", code: "mission09", name: "山林野釣" },
+        mission10: { no: "10", code: "mission10", name: "洗石淘沙" },
+        mission11: { no: "11", code: "mission11", name: "水源淨化" },
+        mission12: { no: "12", code: "mission12", name: "野染工事" },
+        mission13: { no: "13", code: "mission13", name: "鑽木取火" },
+        mission14: { no: "14", code: "mission14", name: "投石射箭" },
+        mission15: { no: "15", code: "mission15", name: "黑夜行軍" },
+        mission16: { no: "16", code: "mission16", name: "潛行偵察" }
       };
 
-      let completed = [];
+      let completed = {};
+      let localRecords = [];
+      let scanner = null;
+
       const messageBox = document.getElementById("message");
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
+      const mapContainer = document.getElementById("map-container");
+      const scoreGrid = document.getElementById("score-grid");
 
-      try {
-        console.log("[DEBUG] completed (before check):", completed);
-        completed = JSON.parse(localStorage.getItem("completedMissions")) || [];
-      } catch (e) {
-        console.warn("無法解析 localStorage 的 completedMissions");
-        completed = [];
-      }
+      initPassLayers();
+      restoreState();
+      bindTeamSelectStorage();
+      renderCompletedLayers();
+      renderScoreBoard();
+      handleUrlScanIfNeeded();
 
-      if (code && missions[code]) {
-        handleScanResult(code);
-      }
-
-      console.log("[DEBUG] completed (before display):", completed);
-      if (completed.length > 0) {
-        completed.forEach((regionId) => {
-          const layer = document.getElementById(`light-${regionId}`);
-          if (layer) {
-            layer.classList.add("active");
-          }
+      function initPassLayers() {
+        Object.values(missions).forEach((mission) => {
+          [10, 5].forEach((points) => {
+            const img = document.createElement("img");
+            img.className = "pass-layer";
+            img.id = `pass-${mission.code}-${points}`;
+            img.alt = `${mission.no} ${mission.name} ${points}點通關標記`;
+            // 通關標記 PNG 檔名規則：關卡代碼 + 關卡名稱 + 點數
+            // 例：01雙索渡河10.png、01雙索渡河5.png
+            img.src = `img/${mission.no}${mission.name}${points}.png`;
+            mapContainer.appendChild(img);
+          });
         });
       }
 
-      window.resetProgress = function () {
-        localStorage.removeItem("completedMissions");
-        location.reload();
-      };
+      function restoreState() {
+        try {
+          completed = JSON.parse(localStorage.getItem("completedMissionScores")) || {};
+        } catch (error) {
+          completed = {};
+        }
+
+        try {
+          localRecords = JSON.parse(localStorage.getItem("scanRecords")) || [];
+        } catch (error) {
+          localRecords = [];
+        }
+
+        const savedTeam = JSON.parse(localStorage.getItem("selectedTeam") || "null");
+        if (savedTeam) {
+          if (savedTeam.division) document.getElementById("division").value = savedTeam.division;
+          if (savedTeam.group) document.getElementById("group").value = savedTeam.group;
+          if (savedTeam.squad) document.getElementById("squad").value = savedTeam.squad;
+        }
+      }
+
+      function bindTeamSelectStorage() {
+        ["division", "group", "squad"].forEach((id) => {
+          document.getElementById(id).addEventListener("change", saveSelectedTeam);
+        });
+      }
+
+      function saveSelectedTeam() {
+        const team = getSelectedTeam();
+        localStorage.setItem("selectedTeam", JSON.stringify(team));
+      }
+
+      function getSelectedTeam() {
+        const division = document.getElementById("division").value;
+        const group = document.getElementById("group").value;
+        const squad = document.getElementById("squad").value;
+        return {
+          division,
+          group,
+          squad,
+          teamKey: `${division}-${group}-${squad}`
+        };
+      }
+
+      function handleUrlScanIfNeeded() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get("code");
+        const points = urlParams.get("points");
+        if (code && points) {
+          handleScanResult(window.location.href);
+        }
+      }
 
       window.startScanner = function () {
         const qrRegion = document.getElementById("qr-reader");
         qrRegion.innerHTML = "";
-        const scanner = new Html5Qrcode("qr-reader");
+
+        if (scanner) {
+          scanner.stop().catch(() => {}).finally(() => {
+            scanner.clear();
+          });
+        }
+
+        scanner = new Html5Qrcode("qr-reader");
 
         scanner.start(
           { facingMode: "environment" },
           { fps: 10, qrbox: 250 },
           (decodedText) => {
-            console.log("掃到 QRCode:", decodedText);
             handleScanResult(decodedText);
             scanner.stop().then(() => {
               qrRegion.innerHTML = "";
             });
           },
-          (error) => {
-            // 可以忽略錯誤
-          }
-        );
+          () => {}
+        ).catch((error) => {
+          showMessage("error", `無法啟動相機：${error}`);
+        });
       };
 
-      window.handleScanResult = function (code) {
-        if (missions[code]) {
-          const regionId = missions[code].regionId;
-          const division = document.getElementById("division").value;
-          const group = document.getElementById("group").value;
-          const squad = document.getElementById("squad").value;
-          
-          if (!completed.includes(regionId)) {
-            completed.push(regionId);
-            localStorage.setItem("completedMissions", JSON.stringify(completed));
-            messageBox.innerText = `🎉 掃描成功！完成「${missions[code].name}」`;
-          } else {
-            messageBox.innerText = `✅ 「${missions[code].name}」已完成`;
-          }
-          const layer = document.getElementById(`light-${regionId}`);
-          if (layer) layer.classList.add("active");
+      window.handleScanResult = function (rawText) {
+        const result = parseQrPayload(rawText);
 
-          fetch("https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec", {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              mission: missions[code].name,
-              region: regionId,
-              division,
-              group,
-              squad,
-              sheet: code.replace('mission', ''), // 傳入任務代碼做為對應的工作表名稱
-              timestamp: new Date().toISOString()
-            })
-          });
-        } else {
-          messageBox.innerText = `❌ 無效的 QRCode`;
+        if (!result) {
+          showMessage("error", "❌ 無效的 QR Code，請確認 QR 內容包含關卡代碼與點數。");
+          return;
         }
+
+        const { code, points } = result;
+        const mission = missions[code];
+
+        if (!mission) {
+          showMessage("error", `❌ 無效的關卡代碼：${code}`);
+          return;
+        }
+
+        if (![10, 5].includes(points)) {
+          showMessage("error", `❌ 無效的點數：${points}，本次活動僅支援 10 點或 5 點。`);
+          return;
+        }
+
+        const team = getSelectedTeam();
+        saveSelectedTeam();
+
+        const previousPoints = completed[code]?.points;
+        completed[code] = {
+          missionCode: code,
+          missionNo: mission.no,
+          missionName: mission.name,
+          points,
+          updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem("completedMissionScores", JSON.stringify(completed));
+
+        const record = buildRecord(mission, points, team, previousPoints);
+        localRecords.push(record);
+        localStorage.setItem("scanRecords", JSON.stringify(localRecords));
+
+        renderCompletedLayers();
+        renderScoreBoard();
+        postToBackend(record);
+
+        const statusText = previousPoints && previousPoints !== points
+          ? `已將「${mission.name}」由 ${previousPoints} 點更新為 ${points} 點`
+          : `完成「${mission.name}」，獲得 ${points} 點`;
+
+        showMessage("success", `🎉 掃描成功！${team.division}營 ${team.group}分團 ${team.squad}小隊 ${statusText}`);
       };
+
+      function parseQrPayload(rawText) {
+        const text = String(rawText || "").trim();
+        if (!text) return null;
+
+        // 支援網址格式：目前網址?code=mission01&points=10
+        try {
+          const url = new URL(text);
+          const code = url.searchParams.get("code") || url.searchParams.get("mission");
+          const points = Number(url.searchParams.get("points") || url.searchParams.get("point") || url.searchParams.get("p"));
+          if (code && points) {
+            return { code: normalizeMissionCode(code), points };
+          }
+        } catch (error) {
+          // 不是網址就往下用純文字格式解析
+        }
+
+        // 支援 JSON 格式：{"code":"mission01","points":10}
+        try {
+          const json = JSON.parse(text);
+          if (json.code && json.points) {
+            return { code: normalizeMissionCode(json.code), points: Number(json.points) };
+          }
+        } catch (error) {
+          // 不是 JSON 就往下用純文字格式解析
+        }
+
+        // 支援純文字格式：mission01-10、mission01_10、mission01|10、mission01,10
+        const match = text.match(/^(mission\d{1,2}|\d{1,2})[-_|,\s]+(10|5)$/i);
+        if (match) {
+          return {
+            code: normalizeMissionCode(match[1]),
+            points: Number(match[2])
+          };
+        }
+
+        return null;
+      }
+
+      function normalizeMissionCode(code) {
+        const value = String(code || "").trim().toLowerCase();
+        if (/^mission\d{1,2}$/.test(value)) {
+          const number = value.replace("mission", "").padStart(2, "0");
+          return `mission${number}`;
+        }
+        if (/^\d{1,2}$/.test(value)) {
+          return `mission${value.padStart(2, "0")}`;
+        }
+        return value;
+      }
+
+      function buildRecord(mission, points, team, previousPoints) {
+        const now = new Date();
+        return {
+          eventName: EVENT_NAME,
+          division: team.division,
+          group: team.group,
+          squad: team.squad,
+          teamKey: team.teamKey,
+          missionCode: mission.code,
+          missionNo: mission.no,
+          missionName: mission.name,
+          result: points === 10 ? "勝者" : "負者",
+          points: Number(points),
+          previousPoints: previousPoints ? Number(previousPoints) : "",
+          action: previousPoints ? "update" : "create",
+          // 每一關仍寫入獨立分頁，方便管理者不篩選即可查看單關狀況
+          // 例：01-雙索渡河、02-古玩競技
+          sheet: `${mission.no}-${mission.name}`,
+          stationSheet: `${mission.no}-${mission.name}`,
+          // 保留舊版 Apps Script 欄位名稱，方便相容
+          mission: mission.name,
+          region: mission.code,
+          timestamp: now.toISOString(),
+          localTime: now.toLocaleString("zh-TW", { hour12: false })
+        };
+      }
+
+      function postToBackend(record) {
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(record)
+        }).catch((error) => {
+          console.warn("後台寫入失敗：", error);
+        });
+      }
+
+      function renderCompletedLayers() {
+        document.querySelectorAll(".pass-layer").forEach((layer) => {
+          layer.classList.remove("active");
+        });
+
+        Object.entries(completed).forEach(([code, data]) => {
+          const layer = document.getElementById(`pass-${code}-${data.points}`);
+          if (layer) layer.classList.add("active");
+        });
+      }
+
+      function renderScoreBoard() {
+        const total = Object.values(completed).reduce((sum, item) => sum + Number(item.points || 0), 0);
+        const entries = Object.values(completed).sort((a, b) => Number(a.missionNo) - Number(b.missionNo));
+
+        scoreGrid.innerHTML = "";
+
+        const totalCard = document.createElement("div");
+        totalCard.className = "score-card";
+        totalCard.innerHTML = `<div>目前總點數</div><strong>${total}</strong>`;
+        scoreGrid.appendChild(totalCard);
+
+        entries.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "score-card";
+          card.innerHTML = `
+            <div>${item.missionNo} ${item.missionName}</div>
+            <strong>${item.points} 點</strong>
+          `;
+          scoreGrid.appendChild(card);
+        });
+      }
+
+      function showMessage(type, text) {
+        messageBox.className = type;
+        messageBox.innerText = text;
+      }
+
+      window.resetProgress = function () {
+        const confirmed = confirm("確定要清除本機進度嗎？這只會清除目前裝置的顯示紀錄，不會刪除後台試算表資料。");
+        if (!confirmed) return;
+        localStorage.removeItem("completedMissionScores");
+        localStorage.removeItem("scanRecords");
+        completed = {};
+        localRecords = [];
+        renderCompletedLayers();
+        renderScoreBoard();
+        showMessage("", "已清除本機進度，請重新掃描 QR Code。");
+      };
+
+      window.downloadLocalCsv = function () {
+        if (!localRecords.length) {
+          showMessage("error", "目前沒有本機掃描紀錄可以匯出。");
+          return;
+        }
+
+        const headers = [
+          "eventName",
+          "division",
+          "group",
+          "squad",
+          "teamKey",
+          "missionCode",
+          "missionNo",
+          "missionName",
+          "result",
+          "points",
+          "previousPoints",
+          "action",
+          "timestamp",
+          "localTime"
+        ];
+
+        const rows = [headers, ...localRecords.map((record) => headers.map((key) => record[key] ?? ""))];
+        const csv = rows.map((row) => row.map(escapeCsv).join(",")).join("\n");
+        const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `闖關計分_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      function escapeCsv(value) {
+        const text = String(value ?? "");
+        if (/[",\n]/.test(text)) {
+          return `"${text.replace(/"/g, """")}"`;
+        }
+        return text;
+      }
     });
   </script>
 </body>
