@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>重返白浪島｜斥候挑戰谷 E-PASS</title>
+  <title>重返白浪島｜屎候挑戰谷 E-PASS</title>
   <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
     * {
@@ -213,7 +213,7 @@
   </style>
 </head>
 <body>
-  <h1>重返白浪島｜斥候挑戰谷</h1>
+  <h1>重返白浪島｜屎候挑戰谷</h1>
   <h2>E-PASS 闖關計分卡</h2>
 
   <section class="panel" aria-label="隊伍資料">
@@ -340,9 +340,9 @@
             img.className = "pass-layer";
             img.id = `pass-${mission.code}-${points}`;
             img.alt = `${mission.no} ${mission.name} ${points}點通關標記`;
-            // 通關標記 PNG 檔名規則：關卡代碼 + 關卡名稱 + 點數
-            // 例：01雙索渡河10.png、01雙索渡河5.png
-            img.src = `img/${mission.no}${mission.name}${points}.png`;
+            // 通關標記 PNG 檔名規則：關卡數字 + 關卡名稱 + '-' + 點數
+            // 例：1雙索渡河-10.png、1雙索渡河-5.png
+            img.src = `img/${Number(mission.no)}${mission.name}-${points}.png`;
             mapContainer.appendChild(img);
           });
         });
