@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>重返白浪島｜斥候挑戰谷 E-PASS</title>
 
-  <!-- 先放錯誤攔截器：只要 JavaScript 出錯，畫面上會直接顯示錯誤 -->
   <script>
     window.addEventListener("error", function (event) {
       var box = document.getElementById("system-status");
@@ -256,7 +255,7 @@
 </head>
 
 <body>
-  <h1>重返白浪島｜斥候挑戰谷 1</h1>
+  <h1>重返白浪島｜斥候挑戰谷</h1>
   <h2>E-PASS 闖關計分卡</h2>
 
   <section class="panel" aria-label="隊伍資料">
@@ -341,6 +340,9 @@
     document.addEventListener("DOMContentLoaded", function () {
       var GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec";
       var EVENT_NAME = "重返白浪島｜斥候挑戰谷";
+      var LOCAL_COMPLETED_KEY = "completedMissionScoresV3";
+      var LOCAL_RECORDS_KEY = "scanRecordsV3";
+      var LOCAL_TEAM_KEY = "selectedTeam";
 
       var missions = {
         mission01: { no: "01", code: "mission01", name: "雙索渡河" },
@@ -400,7 +402,7 @@
           "QR 掃描套件：" + (scannerLoaded ? "已載入" : "未載入，請確認網路可連到 unpkg.com"),
           "瀏覽器相機支援：" + (cameraSupported ? "支援" : "不支援"),
           "相機安全環境：" + (secure ? "符合" : "不符合，請使用 https:// 或 localhost"),
-          "若手動測試可用但相機不可用，通常是網址不是 HTTPS、瀏覽器未允許相機、或手機不允許以區網 IP 開相機。"
+          "本地端防重複：已啟用。同一分營／分團／小隊掃同一關同分數時，不會重複送出。"
         ].join("\n");
       }
 
@@ -415,7 +417,11 @@
         });
 
         ["division", "group", "squad"].forEach(function (id) {
-          document.getElementById(id).addEventListener("change", saveSelectedTeam);
+          document.getElementById(id).addEventListener("change", function () {
+            saveSelectedTeam();
+            renderCompletedLayers();
+            renderScoreBoard();
+          });
         });
       }
 
@@ -428,10 +434,7 @@
             img.className = "pass-layer";
             img.id = "pass-" + mission.code + "-" + points;
             img.alt = mission.no + " " + mission.name + " " + points + "點通關標記";
-
-            // 依你的實際檔名：1雙索渡河-5.png、1雙索渡河-10.png
             img.src = "img/" + Number(mission.no) + mission.name + "-" + points + ".png";
-
             mapContainer.appendChild(img);
           });
         });
@@ -439,19 +442,19 @@
 
       function restoreState() {
         try {
-          completed = JSON.parse(localStorage.getItem("completedMissionScores") || "{}");
+          completed = JSON.parse(localStorage.getItem(LOCAL_COMPLETED_KEY) || "{}");
         } catch (error) {
           completed = {};
         }
 
         try {
-          localRecords = JSON.parse(localStorage.getItem("scanRecords") || "[]");
+          localRecords = JSON.parse(localStorage.getItem(LOCAL_RECORDS_KEY) || "[]");
         } catch (error) {
           localRecords = [];
         }
 
         try {
-          var savedTeam = JSON.parse(localStorage.getItem("selectedTeam") || "null");
+          var savedTeam = JSON.parse(localStorage.getItem(LOCAL_TEAM_KEY) || "null");
           if (savedTeam) {
             if (savedTeam.division) document.getElementById("division").value = savedTeam.division;
             if (savedTeam.group) document.getElementById("group").value = savedTeam.group;
@@ -461,7 +464,7 @@
       }
 
       function saveSelectedTeam() {
-        localStorage.setItem("selectedTeam", JSON.stringify(getSelectedTeam()));
+        localStorage.setItem(LOCAL_TEAM_KEY, JSON.stringify(getSelectedTeam()));
       }
 
       function getSelectedTeam() {
@@ -475,6 +478,10 @@
           squad: squad,
           teamKey: division + "-" + group + "-" + squad
         };
+      }
+
+      function buildScanKey(teamKey, missionCode) {
+        return teamKey + "|" + missionCode;
       }
 
       function handleUrlScanIfNeeded() {
@@ -572,9 +579,40 @@
         var team = getSelectedTeam();
         saveSelectedTeam();
 
-        var previousPoints = completed[mission.code] ? completed[mission.code].points : "";
+        var scanKey = buildScanKey(team.teamKey, mission.code);
+        var previous = completed[scanKey];
 
-        completed[mission.code] = {
+        if (previous && Number(previous.points) === points) {
+          renderCompletedLayers();
+          renderScoreBoard();
+          showMessage(
+            "error",
+            "⚠️ 已掃描過，未重複送出。\n" +
+            team.division + "營 " + team.group + "分團 " + team.squad + "小隊已完成「" +
+            mission.name + "」" + points + " 點。"
+          );
+          return;
+        }
+
+        if (previous && Number(previous.points) !== points) {
+          var confirmed = confirm(
+            team.division + "營 " + team.group + "分團 " + team.squad + "小隊已完成「" +
+            mission.name + "」" + previous.points + " 點。\n\n是否要改成 " + points + " 點？"
+          );
+
+          if (!confirmed) {
+            showMessage("error", "已取消更新，沒有送出資料。");
+            return;
+          }
+        }
+
+        var previousPoints = previous ? previous.points : "";
+
+        completed[scanKey] = {
+          teamKey: team.teamKey,
+          division: team.division,
+          group: team.group,
+          squad: team.squad,
           missionCode: mission.code,
           missionNo: mission.no,
           missionName: mission.name,
@@ -582,11 +620,11 @@
           updatedAt: new Date().toISOString()
         };
 
-        localStorage.setItem("completedMissionScores", JSON.stringify(completed));
+        localStorage.setItem(LOCAL_COMPLETED_KEY, JSON.stringify(completed));
 
         var record = buildRecord(mission, points, team, previousPoints);
         localRecords.push(record);
-        localStorage.setItem("scanRecords", JSON.stringify(localRecords));
+        localStorage.setItem(LOCAL_RECORDS_KEY, JSON.stringify(localRecords));
 
         renderCompletedLayers();
         renderScoreBoard();
@@ -596,7 +634,7 @@
           ? "已將「" + mission.name + "」由 " + previousPoints + " 點更新為 " + points + " 點"
           : "完成「" + mission.name + "」，獲得 " + points + " 點";
 
-        showMessage("success", "🎉 測試／掃描成功！" + team.division + "營 " + team.group + "分團 " + team.squad + "小隊 " + statusText);
+        showMessage("success", "🎉 掃描成功！" + team.division + "營 " + team.group + "分團 " + team.squad + "小隊 " + statusText);
       }
 
       function parseQrPayload(rawText) {
@@ -649,6 +687,8 @@
 
       function buildRecord(mission, points, team, previousPoints) {
         var now = new Date();
+        var missionNumber = String(Number(mission.no));
+        var stationSheetName = missionNumber + "-" + mission.name;
 
         return {
           eventName: EVENT_NAME,
@@ -665,8 +705,8 @@
           points: Number(points),
           previousPoints: previousPoints ? Number(previousPoints) : "",
           action: previousPoints ? "update" : "create",
-          sheet: mission.no.replace(/^0/, "") + "-" + mission.name,
-          stationSheet: mission.no.replace(/^0/, "") + "-" + mission.name,
+          sheet: stationSheetName,
+          stationSheet: stationSheetName,
           timestamp: now.toISOString(),
           localTime: now.toLocaleString("zh-TW", { hour12: false })
         };
@@ -685,24 +725,33 @@
 
       function renderCompletedLayers() {
         var layers = document.querySelectorAll(".pass-layer");
+        var currentTeam = getSelectedTeam();
 
         for (var i = 0; i < layers.length; i++) {
           layers[i].classList.remove("active");
         }
 
-        Object.keys(completed).forEach(function (code) {
-          var data = completed[code];
-          var layer = document.getElementById("pass-" + code + "-" + data.points);
+        Object.keys(completed).forEach(function (key) {
+          var data = completed[key];
+
+          if (data.teamKey !== currentTeam.teamKey) return;
+
+          var layer = document.getElementById("pass-" + data.missionCode + "-" + data.points);
           if (layer) layer.classList.add("active");
         });
       }
 
       function renderScoreBoard() {
+        var currentTeam = getSelectedTeam();
         var total = 0;
-        var entries = Object.values(completed);
+        var entries = [];
 
-        entries.forEach(function (item) {
-          total += Number(item.points || 0);
+        Object.keys(completed).forEach(function (key) {
+          var item = completed[key];
+          if (item.teamKey === currentTeam.teamKey) {
+            total += Number(item.points || 0);
+            entries.push(item);
+          }
         });
 
         entries.sort(function (a, b) {
@@ -713,7 +762,7 @@
 
         var totalCard = document.createElement("div");
         totalCard.className = "score-card";
-        totalCard.innerHTML = "<div>目前總點數</div><strong>" + total + "</strong>";
+        totalCard.innerHTML = "<div>" + currentTeam.division + "營 " + currentTeam.group + "分團 " + currentTeam.squad + "小隊</div><strong>" + total + " 點</strong>";
         scoreGrid.appendChild(totalCard);
 
         entries.forEach(function (item) {
@@ -730,18 +779,18 @@
       }
 
       function resetProgress() {
-        var confirmed = confirm("確定要清除本機進度嗎？這只會清除目前裝置的顯示紀錄，不會刪除後台試算表資料。");
+        var confirmed = confirm("確定要清除本機進度與防重複紀錄嗎？這只會清除目前裝置的顯示紀錄，不會刪除後台試算表資料。");
         if (!confirmed) return;
 
-        localStorage.removeItem("completedMissionScores");
-        localStorage.removeItem("scanRecords");
+        localStorage.removeItem(LOCAL_COMPLETED_KEY);
+        localStorage.removeItem(LOCAL_RECORDS_KEY);
 
         completed = {};
         localRecords = [];
 
         renderCompletedLayers();
         renderScoreBoard();
-        showMessage("", "已清除本機進度，請重新掃描 QR Code。");
+        showMessage("", "已清除本機進度與防重複紀錄，請重新掃描 QR Code。");
       }
 
       function downloadLocalCsv() {
