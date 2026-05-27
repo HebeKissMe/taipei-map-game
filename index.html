@@ -273,6 +273,14 @@
 
   <div id="qr-reader"></div>
 
+  <section class="panel" aria-label="手動測試 QR Code">
+    <label for="manual-code">手動測試 QR Code 內容</label>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <input id="manual-code" type="text" placeholder="例如：mission01-10 或 mission01-5" style="flex:1; min-width:220px; padding:10px; font-size:1rem; border:1px solid #bbb; border-radius:8px;" />
+      <button type="button" onclick="submitManualCode()" style="background:#555;">送出測試</button>
+    </div>
+  </section>
+
   <section class="score-board" aria-label="本機計分紀錄">
     <h3>本機即時計分</h3>
     <div id="score-grid" class="score-grid"></div>
@@ -393,31 +401,60 @@
         }
       }
 
-      window.startScanner = function () {
+      window.startScanner = async function () {
         const qrRegion = document.getElementById("qr-reader");
         qrRegion.innerHTML = "";
 
-        if (scanner) {
-          scanner.stop().catch(() => {}).finally(() => {
-            scanner.clear();
-          });
+        if (typeof Html5Qrcode === "undefined") {
+          showMessage("error", "無法載入 QR Code 掃描套件，請確認網路可以連到 https://unpkg.com/html5-qrcode");
+          return;
         }
 
-        scanner = new Html5Qrcode("qr-reader");
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          showMessage("error", "這個瀏覽器不支援相機掃描。請改用 Chrome / Safari，或使用下方手動測試欄位。");
+          return;
+        }
 
-        scanner.start(
-          { facingMode: "environment" },
-          { fps: 10, qrbox: 250 },
-          (decodedText) => {
-            handleScanResult(decodedText);
-            scanner.stop().then(() => {
+        if (!window.isSecureContext) {
+          showMessage("error", "相機需要 HTTPS 或 localhost 才能啟動。若你是用手機測試，請先把網頁部署到 GitHub Pages / Netlify 等 HTTPS 網址。也可以先用下方手動測試欄位測試流程。");
+          return;
+        }
+
+        try {
+          if (scanner) {
+            await scanner.stop().catch(() => {});
+            await scanner.clear().catch(() => {});
+          }
+
+          scanner = new Html5Qrcode("qr-reader");
+
+          await scanner.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            async (decodedText) => {
+              handleScanResult(decodedText);
+              await scanner.stop().catch(() => {});
               qrRegion.innerHTML = "";
-            });
-          },
-          () => {}
-        ).catch((error) => {
-          showMessage("error", `無法啟動相機：${error}`);
-        });
+            },
+            () => {}
+          );
+
+          showMessage("success", "相機已啟動，請將 QR Code 對準掃描框。");
+        } catch (error) {
+          showMessage("error", `無法啟動相機：${error}。請確認瀏覽器已允許相機權限，且網頁是用 HTTPS 或 localhost 開啟。`);
+        }
+      };
+
+      window.submitManualCode = function () {
+        const input = document.getElementById("manual-code");
+        const value = input.value.trim();
+
+        if (!value) {
+          showMessage("error", "請先輸入 QR Code 內容，例如 mission01-10。");
+          return;
+        }
+
+        handleScanResult(value);
       };
 
       window.handleScanResult = function (rawText) {
@@ -643,8 +680,9 @@
 
       function escapeCsv(value) {
         const text = String(value ?? "");
-        if (/[",\n]/.test(text)) {
-          return `"${text.replace(/"/g, """")}"`;
+        if (/[",
+]/.test(text)) {
+          return `"${text.replace(/"/g, '""')}"`;
         }
         return text;
       }
