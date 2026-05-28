@@ -357,27 +357,10 @@
 
   <div id="qr-reader"></div>
 
-  <section class="panel" aria-label="手動測試 QR Code">
-    <label for="manual-code">手動測試 QR Code 內容</label>
-    <div class="manual-row">
-      <input id="manual-code" type="text" placeholder="例如：mission01-10 或 mission01-5" />
-      <button id="manual-button" type="button">送出測試</button>
-    </div>
-  </section>
-
   <section class="score-board" aria-label="本機計分紀錄">
     <h3>本機即時計分</h3>
     <div id="score-grid" class="score-grid"></div>
   </section>
-
-  <p class="hint">
-    版本：camera-fix-v3<br />
-    QR Code 內容建議格式：<br />
-    10 點紅色 QR：<code>目前網址?code=mission01&points=10</code><br />
-    5 點藍色 QR：<code>目前網址?code=mission01&points=5</code><br />
-    本頁也支援純文字格式：<code>mission01-10</code>、<code>mission01-5</code>、<code>mission01|10</code>、<code>mission01|5</code>。<br />
-    圖片檔名格式：<code>1雙索渡河-10.png</code>、<code>1雙索渡河-5.png</code>。
-  </p>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
