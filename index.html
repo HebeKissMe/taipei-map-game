@@ -202,11 +202,15 @@
     #scan-button { background: #2f80ed; }
     #manual-button { background: #555; }
     #reset-button { background: #eb5757; }
+
     #stop-scan-button {
       display: none;
       background: #555;
     }
-    #stop-scan-button.active { display: inline-block; }
+
+    #stop-scan-button.active {
+      display: inline-block;
+    }
 
     #qr-reader {
       width: 100%;
@@ -271,14 +275,19 @@
 
     @media (max-width: 640px) {
       body { padding: 10px; }
+
       .panel { padding: 10px 8px; }
+
       .control-grid {
         gap: 6px;
         overflow-x: auto;
         justify-content: flex-start;
       }
+
       .control-grid > div { gap: 4px; }
+
       label { font-size: 0.8rem; }
+
       select {
         min-width: 56px;
         padding: 7px 6px;
@@ -363,6 +372,7 @@
   </section>
 
   <p class="hint">
+    版本：camera-fix-v3<br />
     QR Code 內容建議格式：<br />
     10 點紅色 QR：<code>目前網址?code=mission01&points=10</code><br />
     5 點藍色 QR：<code>目前網址?code=mission01&points=5</code><br />
@@ -374,8 +384,8 @@
     document.addEventListener("DOMContentLoaded", function () {
       var GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec";
       var EVENT_NAME = "重返白浪島｜斥候挑戰谷";
-      var LOCAL_COMPLETED_KEY = "completedMissionScoresV5";
-      var LOCAL_RECORDS_KEY = "scanRecordsV5";
+      var LOCAL_COMPLETED_KEY = "completedMissionScoresV6";
+      var LOCAL_RECORDS_KEY = "scanRecordsV6";
       var LOCAL_TEAM_KEY = "selectedTeam";
 
       var missions = {
@@ -400,8 +410,7 @@
       var completed = {};
       var localRecords = [];
       var scanner = null;
-      var scannerRunning = false;
-      var scannerStarting = false;
+      var scannerState = "idle"; // idle | starting | running | stopping
 
       var systemStatus = document.getElementById("system-status");
       var messageBox = document.getElementById("message");
@@ -434,10 +443,12 @@
         systemStatus.className = scannerLoaded && cameraSupported && secure ? "success" : "error";
         systemStatus.innerText = [
           "系統狀態：JavaScript 已成功啟動",
+          "版本：camera-fix-v3",
           "目前網址協定：" + protocol,
           "QR 掃描套件：" + (scannerLoaded ? "已載入" : "未載入，請確認網路可連到 unpkg.com"),
           "瀏覽器相機支援：" + (cameraSupported ? "支援" : "不支援"),
           "相機安全環境：" + (secure ? "符合" : "不符合，請使用 https:// 或 localhost"),
+          "相機狀態：" + scannerState,
           "本地端防重複：已啟用。同一分營／分團／小隊掃同一關同分數時，不會重複送出。"
         ].join("\n");
       }
@@ -522,6 +533,37 @@
         return teamKey + "|" + missionCode;
       }
 
+      function resetQrReaderElement() {
+        var oldReader = document.getElementById("qr-reader");
+        var newReader = oldReader.cloneNode(false);
+        oldReader.parentNode.replaceChild(newReader, oldReader);
+      }
+
+      function getScannerLibraryState() {
+        if (!scanner || typeof scanner.getState !== "function") return null;
+
+        try {
+          return scanner.getState();
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function isLibraryScanning() {
+        var state = getScannerLibraryState();
+
+        if (state === null || state === undefined) {
+          return scannerState === "running";
+        }
+
+        if (typeof Html5QrcodeScannerState !== "undefined") {
+          return state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED;
+        }
+
+        // html5-qrcode 常見狀態：NOT_STARTED=1, SCANNING=2, PAUSED=3
+        return state === 2 || state === 3;
+      }
+
       function handleUrlScanIfNeeded() {
         var urlParams = new URLSearchParams(window.location.search);
         var code = urlParams.get("code");
@@ -530,14 +572,11 @@
       }
 
       async function startScanner() {
-        var qrRegion = document.getElementById("qr-reader");
-
-        if (scannerStarting || scannerRunning) {
+        if (scannerState === "starting" || scannerState === "running") {
           showMessage("success", "相機已經開啟中，請將 QR Code 對準掃描框。");
           return;
         }
 
-        qrRegion.innerHTML = "";
         updateSystemStatus();
 
         if (typeof Html5Qrcode === "undefined") {
@@ -555,12 +594,15 @@
           return;
         }
 
-        scannerStarting = true;
+        scannerState = "starting";
         scanButton.disabled = true;
         scanButton.innerText = "相機啟動中...";
         stopScanButton.classList.add("active");
+        updateSystemStatus();
 
         try {
+          // 每次啟動都重建 qr-reader，避免沿用舊 scanner 的 DOM 狀態
+          resetQrReaderElement();
           scanner = new Html5Qrcode("qr-reader");
 
           await scanner.start(
@@ -573,69 +615,73 @@
             function () {}
           );
 
-          scannerRunning = true;
-          scannerStarting = false;
+          scannerState = "running";
+          scanButton.disabled = false;
           scanButton.innerText = "📷 掃描 QR Code";
+          stopScanButton.classList.add("active");
+          updateSystemStatus();
           showMessage("success", "相機已啟動，請將 QR Code 對準掃描框。若不掃描，請按「關閉相機」。");
         } catch (error) {
-          scannerRunning = false;
-          scannerStarting = false;
+          scannerState = "idle";
           scanner = null;
           scanButton.disabled = false;
           scanButton.innerText = "📷 掃描 QR Code";
           stopScanButton.classList.remove("active");
-          qrRegion.innerHTML = "";
+          resetQrReaderElement();
+          updateSystemStatus();
 
-          showMessage("error", "無法啟動相機：
-" + error + "
-請確認瀏覽器已允許相機權限，且網頁是用 HTTPS 或 localhost 開啟。");
+          showMessage("error", "無法啟動相機：\n" + error + "\n請確認瀏覽器已允許相機權限，且網頁是用 HTTPS 或 localhost 開啟。");
         }
       }
 
       async function stopScanner(showClosedMessage) {
-        var qrRegion = document.getElementById("qr-reader");
+        if (scannerState === "stopping") return;
 
+        scannerState = "stopping";
+        scanButton.disabled = true;
         stopScanButton.classList.remove("active");
-        scanButton.disabled = false;
-        scanButton.innerText = "📷 掃描 QR Code";
+        updateSystemStatus();
 
-        if (!scanner) {
-          scannerRunning = false;
-          scannerStarting = false;
-          qrRegion.innerHTML = "";
-          if (showClosedMessage) showMessage("", "相機已關閉。請先選擇分營、分團、小隊，再掃描關卡 QR Code。");
-          return;
-        }
+        var stopError = null;
 
-        try {
-          if (scannerRunning || scannerStarting) {
-            await scanner.stop();
+        if (scanner) {
+          try {
+            if (isLibraryScanning()) {
+              await scanner.stop();
+            }
+          } catch (error) {
+            stopError = error;
           }
-        } catch (error) {
-          var message = String(error || "");
-          if (
-            message.indexOf("scanner is not running") === -1 &&
-            message.indexOf("not running or paused") === -1 &&
-            message.indexOf("Cannot stop") === -1 &&
-            message.indexOf("cannot stop") === -1
-          ) {
-            console.warn("停止相機時發生錯誤：", error);
-          }
-        }
 
-        try {
-          scanner.clear();
-        } catch (error) {
-          console.warn("清除掃描器時發生錯誤：", error);
+          try {
+            scanner.clear();
+          } catch (error) {}
         }
 
         scanner = null;
-        scannerRunning = false;
-        scannerStarting = false;
-        qrRegion.innerHTML = "";
+        scannerState = "idle";
+        scanButton.disabled = false;
+        scanButton.innerText = "📷 掃描 QR Code";
+        stopScanButton.classList.remove("active");
+        resetQrReaderElement();
+        updateSystemStatus();
+
+        if (stopError) {
+          var message = String(stopError || "");
+          var isExpectedStopError =
+            message.indexOf("scanner is not running") !== -1 ||
+            message.indexOf("not running or paused") !== -1 ||
+            message.indexOf("Cannot stop") !== -1 ||
+            message.indexOf("cannot stop") !== -1;
+
+          if (!isExpectedStopError) {
+            showMessage("error", "停止相機時發生錯誤：\n" + stopError);
+            return;
+          }
+        }
 
         if (showClosedMessage) {
-          showMessage("", "相機已關閉。請先選擇分營、分團、小隊，再掃描關卡 QR Code。");
+          showMessage("", "相機已關閉。你可以再次按「掃描 QR Code」重新開啟相機。");
         }
       }
 
@@ -666,7 +712,7 @@
           return;
         }
 
-        if (![10, 5].includes(points)) {
+        if ([10, 5].indexOf(points) === -1) {
           showMessage("error", "❌ 無效的點數：" + points + "，本次活動僅支援 10 點或 5 點。");
           return;
         }
@@ -887,7 +933,6 @@
         renderScoreBoard();
         showMessage("", "已清除本機進度與防重複紀錄，請重新掃描 QR Code。");
       }
-
     });
   </script>
 </body>
