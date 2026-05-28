@@ -343,7 +343,6 @@
     </div>
   </section>
 
-  <div id="system-status">系統初始化中。如果這行一直沒有改變，代表 JavaScript 沒有成功執行。</div>
   <div id="message">請先選擇分營、分團、小隊，再掃描關卡 QR Code。</div>
 
   <div id="map-container">
@@ -412,7 +411,6 @@
       var scanner = null;
       var scannerState = "idle"; // idle | starting | running | stopping
 
-      var systemStatus = document.getElementById("system-status");
       var messageBox = document.getElementById("message");
       var mapContainer = document.getElementById("map-container");
       var scoreGrid = document.getElementById("score-grid");
