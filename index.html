@@ -4,11 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>重返白浪島｜斥候挑戰谷 E-PASS</title>
+
+  <script>
+    window.addEventListener("error", function (event) {
+      var box = document.getElementById("system-status");
+      if (box) {
+        box.className = "error";
+        box.innerText =
+          "JavaScript 發生錯誤：\n" +
+          event.message + "\n" +
+          "檔案：" + event.filename + "\n" +
+          "行數：" + event.lineno + "，欄位：" + event.colno;
+      }
+    });
+
+    window.addEventListener("unhandledrejection", function (event) {
+      var box = document.getElementById("system-status");
+      if (box) {
+        box.className = "error";
+        box.innerText = "JavaScript Promise 錯誤：\n" + event.reason;
+      }
+    });
+  </script>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
@@ -65,20 +87,38 @@
       font-weight: 700;
     }
 
-    select {
-      width: auto;
-      min-width: 72px;
-      padding: 8px 10px;
+    select,
+    input {
+      padding: 10px;
       font-size: 1rem;
       border: 1px solid #bbb;
       border-radius: 8px;
       background: #fff;
     }
 
-    #message {
+    select {
+      width: auto;
+      min-width: 72px;
+      padding: 8px 10px;
+    }
+
+    input {
+      width: 100%;
+    }
+
+    code {
+      display: inline-block;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #eee;
+      font-size: 0.85em;
+    }
+
+    #message,
+    #system-status {
       width: 100%;
       max-width: 980px;
-      min-height: 44px;
+      min-height: 42px;
       margin: 12px auto;
       padding: 12px;
       background: #fff;
@@ -87,18 +127,27 @@
       font-size: 1rem;
       line-height: 1.5;
       text-align: center;
+      white-space: pre-line;
     }
 
-    #message.success {
-      color: #087f23;
-      border-color: #b7dfb9;
-      background: #f3fbf3;
+    #system-status {
+      min-height: auto;
+      margin-top: 0;
+      font-size: 0.9rem;
+      color: #555;
+      text-align: left;
     }
 
-    #message.error {
-      color: #b00020;
-      border-color: #f1b7bd;
-      background: #fff5f6;
+    .success {
+      color: #087f23 !important;
+      border-color: #b7dfb9 !important;
+      background: #f3fbf3 !important;
+    }
+
+    .error {
+      color: #b00020 !important;
+      border-color: #f1b7bd !important;
+      background: #fff5f6 !important;
     }
 
     #map-container {
@@ -126,9 +175,7 @@
       pointer-events: none;
     }
 
-    .pass-layer.active {
-      display: block;
-    }
+    .pass-layer.active { display: block; }
 
     .button-row {
       display: flex;
@@ -147,28 +194,36 @@
       cursor: pointer;
     }
 
-    #scan-button {
-      background: #2f80ed;
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
     }
 
-    #reset-button {
-      background: #eb5757;
-    }
-
+    #scan-button { background: #2f80ed; }
+    #manual-button { background: #555; }
+    #reset-button { background: #eb5757; }
     #stop-scan-button {
       display: none;
       background: #555;
     }
-
-    #stop-scan-button.active {
-      display: inline-block;
-    }
+    #stop-scan-button.active { display: inline-block; }
 
     #qr-reader {
       width: 100%;
       max-width: 360px;
       margin: 12px auto;
       background: #fff;
+    }
+
+    .manual-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .manual-row input {
+      flex: 1;
+      min-width: 220px;
     }
 
     .score-board {
@@ -202,9 +257,7 @@
       line-height: 1.5;
     }
 
-    .score-card strong {
-      font-size: 1.1rem;
-    }
+    .score-card strong { font-size: 1.1rem; }
 
     .hint {
       width: 100%;
@@ -217,26 +270,15 @@
     }
 
     @media (max-width: 640px) {
-      body {
-        padding: 10px;
-      }
-
-      .panel {
-        padding: 10px 8px;
-      }
-
+      body { padding: 10px; }
+      .panel { padding: 10px 8px; }
       .control-grid {
         gap: 6px;
+        overflow-x: auto;
+        justify-content: flex-start;
       }
-
-      .control-grid > div {
-        gap: 4px;
-      }
-
-      label {
-        font-size: 0.8rem;
-      }
-
+      .control-grid > div { gap: 4px; }
+      label { font-size: 0.8rem; }
       select {
         min-width: 56px;
         padding: 7px 6px;
@@ -245,6 +287,7 @@
     }
   </style>
 </head>
+
 <body>
   <h1>重返白浪島｜斥候挑戰谷</h1>
   <h2>E-PASS 闖關計分卡</h2>
@@ -291,26 +334,26 @@
     </div>
   </section>
 
+  <div id="system-status">系統初始化中。如果這行一直沒有改變，代表 JavaScript 沒有成功執行。</div>
   <div id="message">請先選擇分營、分團、小隊，再掃描關卡 QR Code。</div>
 
   <div id="map-container">
-    <!-- 底圖請放在 img 資料夾，檔名：闖關卡-底圖.jpg -->
     <img src="img/闖關卡-底圖.jpg" id="base-map" alt="闖關卡底圖" />
   </div>
 
   <div class="button-row">
-    <button id="scan-button" type="button" onclick="startScanner()">📷 掃描 QR Code</button>
-    <button id="stop-scan-button" type="button" onclick="stopScanner()">關閉相機</button>
-    <button id="reset-button" type="button" onclick="resetProgress()">清除本機進度</button>
+    <button id="scan-button" type="button">📷 掃描 QR Code</button>
+    <button id="stop-scan-button" type="button">關閉相機</button>
+    <button id="reset-button" type="button">清除本機進度</button>
   </div>
 
   <div id="qr-reader"></div>
 
   <section class="panel" aria-label="手動測試 QR Code">
     <label for="manual-code">手動測試 QR Code 內容</label>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <input id="manual-code" type="text" placeholder="例如：mission01-10 或 mission01-5" style="flex:1; min-width:220px; padding:10px; font-size:1rem; border:1px solid #bbb; border-radius:8px;" />
-      <button type="button" onclick="submitManualCode()" style="background:#555;">送出測試</button>
+    <div class="manual-row">
+      <input id="manual-code" type="text" placeholder="例如：mission01-10 或 mission01-5" />
+      <button id="manual-button" type="button">送出測試</button>
     </div>
   </section>
 
@@ -324,15 +367,18 @@
     10 點紅色 QR：<code>目前網址?code=mission01&points=10</code><br />
     5 點藍色 QR：<code>目前網址?code=mission01&points=5</code><br />
     本頁也支援純文字格式：<code>mission01-10</code>、<code>mission01-5</code>、<code>mission01|10</code>、<code>mission01|5</code>。<br />
-    底圖用的入口 QR Code 可直接使用本頁網址，QR Code 顏色維持黑色即可。
+    圖片檔名格式：<code>1雙索渡河-10.png</code>、<code>1雙索渡河-5.png</code>。
   </p>
 
   <script>
-    window.addEventListener("DOMContentLoaded", function () {
-      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec";
-      const EVENT_NAME = "重返白浪島｜斥候挑戰谷";
+    document.addEventListener("DOMContentLoaded", function () {
+      var GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnmKlY6aC0SqqD5l7yBg8VOyh1A7pNE7bNkf-PSnbiufUuX9WUNBNU0cIbdtmnaf2ipQ/exec";
+      var EVENT_NAME = "重返白浪島｜斥候挑戰谷";
+      var LOCAL_COMPLETED_KEY = "completedMissionScoresV5";
+      var LOCAL_RECORDS_KEY = "scanRecordsV5";
+      var LOCAL_TEAM_KEY = "selectedTeam";
 
-      const missions = {
+      var missions = {
         mission01: { no: "01", code: "mission01", name: "雙索渡河" },
         mission02: { no: "02", code: "mission02", name: "古玩競技" },
         mission03: { no: "03", code: "mission03", name: "套索越谷" },
@@ -351,32 +397,82 @@
         mission16: { no: "16", code: "mission16", name: "潛行偵察" }
       };
 
-      let completed = {};
-      let localRecords = [];
-      let scanner = null;
+      var completed = {};
+      var localRecords = [];
+      var scanner = null;
+      var scannerRunning = false;
+      var scannerStarting = false;
 
-      const messageBox = document.getElementById("message");
-      const mapContainer = document.getElementById("map-container");
-      const scoreGrid = document.getElementById("score-grid");
-      const stopScanButton = document.getElementById("stop-scan-button");
+      var systemStatus = document.getElementById("system-status");
+      var messageBox = document.getElementById("message");
+      var mapContainer = document.getElementById("map-container");
+      var scoreGrid = document.getElementById("score-grid");
+      var scanButton = document.getElementById("scan-button");
+      var stopScanButton = document.getElementById("stop-scan-button");
+      var resetButton = document.getElementById("reset-button");
+      var manualButton = document.getElementById("manual-button");
+      var manualInput = document.getElementById("manual-code");
 
-      initPassLayers();
-      restoreState();
-      bindTeamSelectStorage();
-      renderCompletedLayers();
-      renderScoreBoard();
-      handleUrlScanIfNeeded();
+      init();
+
+      function init() {
+        initPassLayers();
+        restoreState();
+        bindEvents();
+        renderCompletedLayers();
+        renderScoreBoard();
+        handleUrlScanIfNeeded();
+        updateSystemStatus();
+      }
+
+      function updateSystemStatus() {
+        var scannerLoaded = typeof Html5Qrcode !== "undefined";
+        var cameraSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        var secure = window.isSecureContext;
+        var protocol = window.location.protocol;
+
+        systemStatus.className = scannerLoaded && cameraSupported && secure ? "success" : "error";
+        systemStatus.innerText = [
+          "系統狀態：JavaScript 已成功啟動",
+          "目前網址協定：" + protocol,
+          "QR 掃描套件：" + (scannerLoaded ? "已載入" : "未載入，請確認網路可連到 unpkg.com"),
+          "瀏覽器相機支援：" + (cameraSupported ? "支援" : "不支援"),
+          "相機安全環境：" + (secure ? "符合" : "不符合，請使用 https:// 或 localhost"),
+          "本地端防重複：已啟用。同一分營／分團／小隊掃同一關同分數時，不會重複送出。"
+        ].join("\n");
+      }
+
+      function bindEvents() {
+        scanButton.addEventListener("click", startScanner);
+        stopScanButton.addEventListener("click", function () {
+          stopScanner(true);
+        });
+        resetButton.addEventListener("click", resetProgress);
+        manualButton.addEventListener("click", submitManualCode);
+
+        manualInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter") submitManualCode();
+        });
+
+        ["division", "group", "squad"].forEach(function (id) {
+          document.getElementById(id).addEventListener("change", function () {
+            saveSelectedTeam();
+            renderCompletedLayers();
+            renderScoreBoard();
+          });
+        });
+      }
 
       function initPassLayers() {
-        Object.values(missions).forEach((mission) => {
-          [10, 5].forEach((points) => {
-            const img = document.createElement("img");
+        Object.keys(missions).forEach(function (key) {
+          var mission = missions[key];
+
+          [10, 5].forEach(function (points) {
+            var img = document.createElement("img");
             img.className = "pass-layer";
-            img.id = `pass-${mission.code}-${points}`;
-            img.alt = `${mission.no} ${mission.name} ${points}點通關標記`;
-            // 通關標記 PNG 檔名規則：關卡數字 + 關卡名稱 + '-' + 點數
-            // 例：1雙索渡河-10.png、1雙索渡河-5.png
-            img.src = `img/${Number(mission.no)}${mission.name}-${points}.png`;
+            img.id = "pass-" + mission.code + "-" + points;
+            img.alt = mission.no + " " + mission.name + " " + points + "點通關標記";
+            img.src = "img/" + Number(mission.no) + mission.name + "-" + points + ".png";
             mapContainer.appendChild(img);
           });
         });
@@ -384,118 +480,167 @@
 
       function restoreState() {
         try {
-          completed = JSON.parse(localStorage.getItem("completedMissionScores")) || {};
+          completed = JSON.parse(localStorage.getItem(LOCAL_COMPLETED_KEY) || "{}");
         } catch (error) {
           completed = {};
         }
 
         try {
-          localRecords = JSON.parse(localStorage.getItem("scanRecords")) || [];
+          localRecords = JSON.parse(localStorage.getItem(LOCAL_RECORDS_KEY) || "[]");
         } catch (error) {
           localRecords = [];
         }
 
-        const savedTeam = JSON.parse(localStorage.getItem("selectedTeam") || "null");
-        if (savedTeam) {
-          if (savedTeam.division) document.getElementById("division").value = savedTeam.division;
-          if (savedTeam.group) document.getElementById("group").value = savedTeam.group;
-          if (savedTeam.squad) document.getElementById("squad").value = savedTeam.squad;
-        }
-      }
-
-      function bindTeamSelectStorage() {
-        ["division", "group", "squad"].forEach((id) => {
-          document.getElementById(id).addEventListener("change", saveSelectedTeam);
-        });
+        try {
+          var savedTeam = JSON.parse(localStorage.getItem(LOCAL_TEAM_KEY) || "null");
+          if (savedTeam) {
+            if (savedTeam.division) document.getElementById("division").value = savedTeam.division;
+            if (savedTeam.group) document.getElementById("group").value = savedTeam.group;
+            if (savedTeam.squad) document.getElementById("squad").value = savedTeam.squad;
+          }
+        } catch (error) {}
       }
 
       function saveSelectedTeam() {
-        const team = getSelectedTeam();
-        localStorage.setItem("selectedTeam", JSON.stringify(team));
+        localStorage.setItem(LOCAL_TEAM_KEY, JSON.stringify(getSelectedTeam()));
       }
 
       function getSelectedTeam() {
-        const division = document.getElementById("division").value;
-        const group = document.getElementById("group").value;
-        const squad = document.getElementById("squad").value;
+        var division = document.getElementById("division").value;
+        var group = document.getElementById("group").value;
+        var squad = document.getElementById("squad").value;
+
         return {
-          division,
-          group,
-          squad,
-          teamKey: `${division}-${group}-${squad}`
+          division: division,
+          group: group,
+          squad: squad,
+          teamKey: division + "-" + group + "-" + squad
         };
       }
 
-      function handleUrlScanIfNeeded() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get("code");
-        const points = urlParams.get("points");
-        if (code && points) {
-          handleScanResult(window.location.href);
-        }
+      function buildScanKey(teamKey, missionCode) {
+        return teamKey + "|" + missionCode;
       }
 
-      window.startScanner = async function () {
-        const qrRegion = document.getElementById("qr-reader");
+      function handleUrlScanIfNeeded() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var code = urlParams.get("code");
+        var points = urlParams.get("points");
+        if (code && points) handleScanResult(window.location.href);
+      }
+
+      async function startScanner() {
+        var qrRegion = document.getElementById("qr-reader");
+
+        if (scannerStarting || scannerRunning) {
+          showMessage("success", "相機已經開啟中，請將 QR Code 對準掃描框。");
+          return;
+        }
+
         qrRegion.innerHTML = "";
+        updateSystemStatus();
 
         if (typeof Html5Qrcode === "undefined") {
-          showMessage("error", "無法載入 QR Code 掃描套件，請確認網路可以連到 https://unpkg.com/html5-qrcode");
+          showMessage("error", "無法載入 QR Code 掃描套件。請確認網路可以連到 https://unpkg.com/html5-qrcode，或先使用手動測試欄位。");
           return;
         }
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          showMessage("error", "這個瀏覽器不支援相機掃描。請改用 Chrome / Safari，或使用下方手動測試欄位。");
+          showMessage("error", "這個瀏覽器不支援相機掃描。請改用 Chrome / Safari，或使用手動測試欄位。");
           return;
         }
 
         if (!window.isSecureContext) {
-          showMessage("error", "相機需要 HTTPS 或 localhost 才能啟動。若你是用手機測試，請先把網頁部署到 GitHub Pages / Netlify 等 HTTPS 網址。也可以先用下方手動測試欄位測試流程。");
+          showMessage("error", "相機需要 HTTPS 或 localhost 才能啟動。手機若開 http://192.168.x.x 通常不能用相機，請改部署到 GitHub Pages / Netlify 等 HTTPS 網址。");
           return;
         }
 
-        try {
-          if (scanner) {
-            await scanner.stop().catch(() => {});
-            await scanner.clear().catch(() => {});
-          }
+        scannerStarting = true;
+        scanButton.disabled = true;
+        scanButton.innerText = "相機啟動中...";
+        stopScanButton.classList.add("active");
 
+        try {
           scanner = new Html5Qrcode("qr-reader");
 
           await scanner.start(
             { facingMode: "environment" },
             { fps: 10, qrbox: { width: 250, height: 250 } },
-            async (decodedText) => {
+            async function (decodedText) {
               handleScanResult(decodedText);
-              await stopScanner();
+              await stopScanner(false);
             },
-            () => {}
+            function () {}
           );
 
-          stopScanButton.classList.add("active");
+          scannerRunning = true;
+          scannerStarting = false;
+          scanButton.innerText = "📷 掃描 QR Code";
           showMessage("success", "相機已啟動，請將 QR Code 對準掃描框。若不掃描，請按「關閉相機」。");
         } catch (error) {
-          showMessage("error", `無法啟動相機：${error}。請確認瀏覽器已允許相機權限，且網頁是用 HTTPS 或 localhost 開啟。`);
-        }
-      };
-
-      window.stopScanner = async function () {
-        const qrRegion = document.getElementById("qr-reader");
-
-        if (scanner) {
-          await scanner.stop().catch(() => {});
-          await scanner.clear().catch(() => {});
+          scannerRunning = false;
+          scannerStarting = false;
           scanner = null;
+          scanButton.disabled = false;
+          scanButton.innerText = "📷 掃描 QR Code";
+          stopScanButton.classList.remove("active");
+          qrRegion.innerHTML = "";
+
+          showMessage("error", "無法啟動相機：
+" + error + "
+請確認瀏覽器已允許相機權限，且網頁是用 HTTPS 或 localhost 開啟。");
+        }
+      }
+
+      async function stopScanner(showClosedMessage) {
+        var qrRegion = document.getElementById("qr-reader");
+
+        stopScanButton.classList.remove("active");
+        scanButton.disabled = false;
+        scanButton.innerText = "📷 掃描 QR Code";
+
+        if (!scanner) {
+          scannerRunning = false;
+          scannerStarting = false;
+          qrRegion.innerHTML = "";
+          if (showClosedMessage) showMessage("", "相機已關閉。請先選擇分營、分團、小隊，再掃描關卡 QR Code。");
+          return;
         }
 
-        qrRegion.innerHTML = "";
-        stopScanButton.classList.remove("active");
-        showMessage("", "相機已關閉。請先選擇分營、分團、小隊，再掃描關卡 QR Code。");
-      };
+        try {
+          if (scannerRunning || scannerStarting) {
+            await scanner.stop();
+          }
+        } catch (error) {
+          var message = String(error || "");
+          if (
+            message.indexOf("scanner is not running") === -1 &&
+            message.indexOf("not running or paused") === -1 &&
+            message.indexOf("Cannot stop") === -1 &&
+            message.indexOf("cannot stop") === -1
+          ) {
+            console.warn("停止相機時發生錯誤：", error);
+          }
+        }
 
-      window.submitManualCode = function () {
-        const input = document.getElementById("manual-code");
-        const value = input.value.trim();
+        try {
+          scanner.clear();
+        } catch (error) {
+          console.warn("清除掃描器時發生錯誤：", error);
+        }
+
+        scanner = null;
+        scannerRunning = false;
+        scannerStarting = false;
+        qrRegion.innerHTML = "";
+
+        if (showClosedMessage) {
+          showMessage("", "相機已關閉。請先選擇分營、分團、小隊，再掃描關卡 QR Code。");
+        }
+      }
+
+      function submitManualCode() {
+        var value = manualInput.value.trim();
 
         if (!value) {
           showMessage("error", "請先輸入 QR Code 內容，例如 mission01-10。");
@@ -503,85 +648,111 @@
         }
 
         handleScanResult(value);
-      };
+      }
 
-      window.handleScanResult = function (rawText) {
-        const result = parseQrPayload(rawText);
+      function handleScanResult(rawText) {
+        var result = parseQrPayload(rawText);
 
         if (!result) {
-          showMessage("error", "❌ 無效的 QR Code，請確認 QR 內容包含關卡代碼與點數。");
+          showMessage("error", "❌ 無效的 QR Code，請確認內容包含關卡代碼與點數，例如 mission01-10。");
           return;
         }
 
-        const { code, points } = result;
-        const mission = missions[code];
+        var mission = missions[result.code];
+        var points = Number(result.points);
 
         if (!mission) {
-          showMessage("error", `❌ 無效的關卡代碼：${code}`);
+          showMessage("error", "❌ 無效的關卡代碼：" + result.code);
           return;
         }
 
         if (![10, 5].includes(points)) {
-          showMessage("error", `❌ 無效的點數：${points}，本次活動僅支援 10 點或 5 點。`);
+          showMessage("error", "❌ 無效的點數：" + points + "，本次活動僅支援 10 點或 5 點。");
           return;
         }
 
-        const team = getSelectedTeam();
+        var team = getSelectedTeam();
         saveSelectedTeam();
 
-        const previousPoints = completed[code]?.points;
-        completed[code] = {
-          missionCode: code,
+        var scanKey = buildScanKey(team.teamKey, mission.code);
+        var previous = completed[scanKey];
+
+        if (previous && Number(previous.points) === points) {
+          renderCompletedLayers();
+          renderScoreBoard();
+          showMessage(
+            "error",
+            "⚠️ 已掃描過，未重複送出。\n" +
+            team.division + "營 " + team.group + "分團 " + team.squad + "小隊已完成「" +
+            mission.name + "」" + points + " 點。"
+          );
+          return;
+        }
+
+        if (previous && Number(previous.points) !== points) {
+          var confirmed = confirm(
+            team.division + "營 " + team.group + "分團 " + team.squad + "小隊已完成「" +
+            mission.name + "」" + previous.points + " 點。\n\n是否要改成 " + points + " 點？"
+          );
+
+          if (!confirmed) {
+            showMessage("error", "已取消更新，沒有送出資料。");
+            return;
+          }
+        }
+
+        var previousPoints = previous ? previous.points : "";
+
+        completed[scanKey] = {
+          teamKey: team.teamKey,
+          division: team.division,
+          group: team.group,
+          squad: team.squad,
+          missionCode: mission.code,
           missionNo: mission.no,
           missionName: mission.name,
-          points,
+          points: points,
           updatedAt: new Date().toISOString()
         };
-        localStorage.setItem("completedMissionScores", JSON.stringify(completed));
 
-        const record = buildRecord(mission, points, team, previousPoints);
+        localStorage.setItem(LOCAL_COMPLETED_KEY, JSON.stringify(completed));
+
+        var record = buildRecord(mission, points, team, previousPoints);
         localRecords.push(record);
-        localStorage.setItem("scanRecords", JSON.stringify(localRecords));
+        localStorage.setItem(LOCAL_RECORDS_KEY, JSON.stringify(localRecords));
 
         renderCompletedLayers();
         renderScoreBoard();
         postToBackend(record);
 
-        const statusText = previousPoints && previousPoints !== points
-          ? `已將「${mission.name}」由 ${previousPoints} 點更新為 ${points} 點`
-          : `完成「${mission.name}」，獲得 ${points} 點`;
+        var statusText = previousPoints && Number(previousPoints) !== points
+          ? "已將「" + mission.name + "」由 " + previousPoints + " 點更新為 " + points + " 點"
+          : "完成「" + mission.name + "」，獲得 " + points + " 點";
 
-        showMessage("success", `🎉 掃描成功！${team.division}營 ${team.group}分團 ${team.squad}小隊 ${statusText}`);
-      };
+        showMessage("success", "🎉 掃描成功！" + team.division + "營 " + team.group + "分團 " + team.squad + "小隊 " + statusText);
+      }
 
       function parseQrPayload(rawText) {
-        const text = String(rawText || "").trim();
+        var text = String(rawText || "").trim();
         if (!text) return null;
 
-        // 支援網址格式：目前網址?code=mission01&points=10
         try {
-          const url = new URL(text);
-          const code = url.searchParams.get("code") || url.searchParams.get("mission");
-          const points = Number(url.searchParams.get("points") || url.searchParams.get("point") || url.searchParams.get("p"));
-          if (code && points) {
-            return { code: normalizeMissionCode(code), points };
+          var url = new URL(text);
+          var codeFromUrl = url.searchParams.get("code") || url.searchParams.get("mission");
+          var pointsFromUrl = Number(url.searchParams.get("points") || url.searchParams.get("point") || url.searchParams.get("p"));
+          if (codeFromUrl && pointsFromUrl) {
+            return { code: normalizeMissionCode(codeFromUrl), points: pointsFromUrl };
           }
-        } catch (error) {
-          // 不是網址就往下用純文字格式解析
-        }
+        } catch (error) {}
 
-        // 支援 JSON 格式：{"code":"mission01","points":10}
         try {
-          const json = JSON.parse(text);
+          var json = JSON.parse(text);
           if (json.code && json.points) {
             return { code: normalizeMissionCode(json.code), points: Number(json.points) };
           }
-        } catch (error) {
-          // 不是 JSON 就往下用純文字格式解析
-        }
+        } catch (error) {}
 
-        // 支援純文字格式：mission01-10、mission01_10、mission01|10、mission01,10
-        const match = text.match(/^(mission\d{1,2}|\d{1,2})[-_|,\s]+(10|5)$/i);
+        var match = text.match(/^(mission\d{1,2}|\d{1,2})[-_|,\s]+(10|5)$/i);
         if (match) {
           return {
             code: normalizeMissionCode(match[1]),
@@ -593,19 +764,27 @@
       }
 
       function normalizeMissionCode(code) {
-        const value = String(code || "").trim().toLowerCase();
+        var value = String(code || "").trim().toLowerCase();
+
         if (/^mission\d{1,2}$/.test(value)) {
-          const number = value.replace("mission", "").padStart(2, "0");
-          return `mission${number}`;
+          var number = value.replace("mission", "");
+          while (number.length < 2) number = "0" + number;
+          return "mission" + number;
         }
+
         if (/^\d{1,2}$/.test(value)) {
-          return `mission${value.padStart(2, "0")}`;
+          while (value.length < 2) value = "0" + value;
+          return "mission" + value;
         }
+
         return value;
       }
 
       function buildRecord(mission, points, team, previousPoints) {
-        const now = new Date();
+        var now = new Date();
+        var missionNumber = String(Number(mission.no));
+        var stationSheetName = missionNumber + "-" + mission.name;
+
         return {
           eventName: EVENT_NAME,
           division: team.division,
@@ -615,17 +794,14 @@
           missionCode: mission.code,
           missionNo: mission.no,
           missionName: mission.name,
+          mission: mission.name,
+          region: mission.code,
           result: points === 10 ? "勝者" : "負者",
           points: Number(points),
           previousPoints: previousPoints ? Number(previousPoints) : "",
           action: previousPoints ? "update" : "create",
-          // 每一關仍寫入獨立分頁，方便管理者不篩選即可查看單關狀況
-          // 例：01-雙索渡河、02-古玩競技
-          sheet: `${mission.no}-${mission.name}`,
-          stationSheet: `${mission.no}-${mission.name}`,
-          // 保留舊版 Apps Script 欄位名稱，方便相容
-          mission: mission.name,
-          region: mission.code,
+          sheet: stationSheetName,
+          stationSheet: stationSheetName,
           timestamp: now.toISOString(),
           localTime: now.toLocaleString("zh-TW", { hour12: false })
         };
@@ -637,62 +813,81 @@
           mode: "no-cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(record)
-        }).catch((error) => {
+        }).catch(function (error) {
           console.warn("後台寫入失敗：", error);
         });
       }
 
       function renderCompletedLayers() {
-        document.querySelectorAll(".pass-layer").forEach((layer) => {
-          layer.classList.remove("active");
-        });
+        var layers = document.querySelectorAll(".pass-layer");
+        var currentTeam = getSelectedTeam();
 
-        Object.entries(completed).forEach(([code, data]) => {
-          const layer = document.getElementById(`pass-${code}-${data.points}`);
+        for (var i = 0; i < layers.length; i++) {
+          layers[i].classList.remove("active");
+        }
+
+        Object.keys(completed).forEach(function (key) {
+          var data = completed[key];
+
+          if (data.teamKey !== currentTeam.teamKey) return;
+
+          var layer = document.getElementById("pass-" + data.missionCode + "-" + data.points);
           if (layer) layer.classList.add("active");
         });
       }
 
       function renderScoreBoard() {
-        const total = Object.values(completed).reduce((sum, item) => sum + Number(item.points || 0), 0);
-        const entries = Object.values(completed).sort((a, b) => Number(a.missionNo) - Number(b.missionNo));
+        var currentTeam = getSelectedTeam();
+        var total = 0;
+        var entries = [];
+
+        Object.keys(completed).forEach(function (key) {
+          var item = completed[key];
+          if (item.teamKey === currentTeam.teamKey) {
+            total += Number(item.points || 0);
+            entries.push(item);
+          }
+        });
+
+        entries.sort(function (a, b) {
+          return Number(a.missionNo) - Number(b.missionNo);
+        });
 
         scoreGrid.innerHTML = "";
 
-        const totalCard = document.createElement("div");
+        var totalCard = document.createElement("div");
         totalCard.className = "score-card";
-        totalCard.innerHTML = `<div>目前總點數</div><strong>${total}</strong>`;
+        totalCard.innerHTML = "<div>" + currentTeam.division + "營 " + currentTeam.group + "分團 " + currentTeam.squad + "小隊</div><strong>" + total + " 點</strong>";
         scoreGrid.appendChild(totalCard);
 
-        entries.forEach((item) => {
-          const card = document.createElement("div");
+        entries.forEach(function (item) {
+          var card = document.createElement("div");
           card.className = "score-card";
-          card.innerHTML = `
-            <div>${item.missionNo} ${item.missionName}</div>
-            <strong>${item.points} 點</strong>
-          `;
+          card.innerHTML = "<div>" + item.missionNo + " " + item.missionName + "</div><strong>" + item.points + " 點</strong>";
           scoreGrid.appendChild(card);
         });
       }
 
       function showMessage(type, text) {
-        messageBox.className = type;
+        messageBox.className = type || "";
         messageBox.innerText = text;
       }
 
-      window.resetProgress = function () {
-        const confirmed = confirm("確定要清除本機進度嗎？這只會清除目前裝置的顯示紀錄，不會刪除後台試算表資料。");
+      function resetProgress() {
+        var confirmed = confirm("確定要清除本機進度與防重複紀錄嗎？這只會清除目前裝置的顯示紀錄，不會刪除後台試算表資料。");
         if (!confirmed) return;
-        localStorage.removeItem("completedMissionScores");
-        localStorage.removeItem("scanRecords");
+
+        localStorage.removeItem(LOCAL_COMPLETED_KEY);
+        localStorage.removeItem(LOCAL_RECORDS_KEY);
+
         completed = {};
         localRecords = [];
+
         renderCompletedLayers();
         renderScoreBoard();
-        showMessage("", "已清除本機進度，請重新掃描 QR Code。");
-      };
+        showMessage("", "已清除本機進度與防重複紀錄，請重新掃描 QR Code。");
+      }
 
-      // 本次需求不需要前端匯出本機紀錄，因此保留 localStorage 記錄供防重複與畫面顯示使用，不提供下載。
     });
   </script>
 </body>
