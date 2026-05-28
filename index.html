@@ -440,17 +440,7 @@
         var secure = window.isSecureContext;
         var protocol = window.location.protocol;
 
-        systemStatus.className = scannerLoaded && cameraSupported && secure ? "success" : "error";
-        systemStatus.innerText = [
-          "系統狀態：JavaScript 已成功啟動",
-          "版本：camera-fix-v3",
-          "目前網址協定：" + protocol,
-          "QR 掃描套件：" + (scannerLoaded ? "已載入" : "未載入，請確認網路可連到 unpkg.com"),
-          "瀏覽器相機支援：" + (cameraSupported ? "支援" : "不支援"),
-          "相機安全環境：" + (secure ? "符合" : "不符合，請使用 https:// 或 localhost"),
-          "相機狀態：" + scannerState,
-          "本地端防重複：已啟用。同一分營／分團／小隊掃同一關同分數時，不會重複送出。"
-        ].join("\n");
+        
       }
 
       function bindEvents() {
